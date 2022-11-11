@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/src/**",
+                "${workspaceFolder}/src/nn/**",
+                "${workspaceFolder}/src/lib/**"
+            ],
+            "defines": [],
+            "compilerPath": "/opt/devkitpro/devkitA64/bin/aarch64-none-elf-g++",
+            "cStandard": "c17",
+            "cppStandard": "gnu++23",
+            "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+        }
+    ],
+    "version": 4
+}
