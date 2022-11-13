@@ -29,10 +29,30 @@ struct hostent
 
 namespace nn { namespace socket {
 
-        struct Config;
+        struct Config {
+            int unkInt1 = 2; // 0x0 (value is 2 in SMO sdk, 8 in sv)
+            bool unkBool1 = false; // 0x4
+            bool isUseBsdS = false; // 0x5
+            void* pool; // 0x8
+            ulong poolSize; // 0x10
+            ulong allocPoolSize; // 0x18
+            ulong unkLong1 = 0x8000; // 0x20
+            ulong unkLong2 = 0x10000; // 0x28
+            ulong unkLong3 = 0x30000; // 0x30
+            ulong unkLong4 = 0x30000; // 0x38
+            ulong unkLong5 = 0x2400; // 0x40
+            ulong unkLong6 = 0xA500; // 0x48
+            int unkInt3 = 4; // 0x50
+            int concurLimit; // 0x54
+            int padding;
+        };
 
-        // Result Initialize(void* pool, ulong poolSize, ulong allocPoolSize, int concurLimit);
-        Result Initialize(Config const &config);
+        static_assert(sizeof(Config) == 0x60, "Config Size");
+
+        constexpr int configSize = sizeof(Config);
+
+        Result Initialize(void* pool, ulong poolSize, ulong allocPoolSize, int concurLimit);
+        Result Initialize(Config const& config);
 
         s32 SetSockOpt(s32 socket, s32 socketLevel, s32 option, void const*, u32 len);
 

@@ -10,7 +10,6 @@ Logger& Logger::instance() {
 }
 
 namespace {
-
     constexpr inline auto DefaultTcpAutoBufferSizeMax      = 192 * 1024; /* 192kb */
     constexpr inline auto MinTransferMemorySize            = (2 * DefaultTcpAutoBufferSizeMax + (128 * 1024));
     constexpr inline auto MinSocketAllocatorSize           = 128 * 1024;
@@ -19,8 +18,9 @@ namespace {
     constexpr inline auto TransferMemorySize = MinTransferMemorySize * 1;
 
     constexpr inline auto SocketPoolSize = SocketAllocatorSize + TransferMemorySize;
-
 };
+
+char socketPool[SocketPoolSize] __attribute__((aligned(0x4000)));
 
 nn::Result Logger::init(const char *ip, u16 port) {
     in_addr hostAddress = { 0 };
@@ -31,10 +31,6 @@ nn::Result Logger::init(const char *ip, u16 port) {
 
     nn::nifm::Initialize();
 
-    // void* socketPool = aligned_alloc(0x4000, SocketPoolSize);
-
-    // nn::socket::Initialize(socketPool, SocketPoolSize, SocketAllocatorSize, 0xE);
-
     nn::nifm::SubmitNetworkRequest();
 
     while (nn::nifm::IsNetworkRequestOnHold()) { }
@@ -43,6 +39,15 @@ nn::Result Logger::init(const char *ip, u16 port) {
         mState = LoggerState::UNAVAILABLE;
         return -1;
     }
+
+    nn::socket::Config config;
+
+    config.pool = socketPool;
+    config.allocPoolSize = SocketAllocatorSize;
+    config.poolSize = SocketPoolSize;
+    config.concurLimit = 0xE;
+
+    nn::socket::Initialize(config);
 
     if ((mSocketFd = nn::socket::Socket(2, 1, 0)) < 0) {
         mState = LoggerState::UNAVAILABLE;
