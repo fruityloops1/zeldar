@@ -55,4 +55,6 @@ namespace nn::fs {
         TODO: ?
     */
     Result RenameDirectory(char const*, char const*);
+
+    Result GetEntryType(nn::fs::DirectoryEntryType*, char const*);
 } // namespace nn::fs

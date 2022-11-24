@@ -28,7 +28,10 @@ while True:
             data = connection.recv(1024)
 
             if data:
-                print(data.decode("utf-8"), end='', flush=True)
+                try:
+                    print(data.decode("utf-8"), end='', flush=True)
+                except:
+                    print("Failed to decode data!")
             else:
                 print(f'Connection Terminated.')
                 break

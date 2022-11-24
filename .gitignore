@@ -35,3 +35,8 @@ build/
 *.out
 *.app
 .idea/
+
+# temporary files
+
+flatbuffer_schems/
+flatbuffers/

@@ -6,6 +6,7 @@
 
 #include "lib/diag/abort.hpp"
 #include "lib/diag/assert.hpp"
+#include "lib/diag/debug.hpp"
 
 #include "lib/reloc/rtld.hpp"
 
