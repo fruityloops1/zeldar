@@ -24,7 +24,7 @@ struct FlatBufferLoaderInfo
 struct FlatBufferLoader
 {
   void *__vftable;
-  void* field_8;
+  void *field_8;
   char gap_10[48];
   FlatBufferLoaderInfo *mFileInfo;
   char gap_48[88];
@@ -33,17 +33,20 @@ struct FlatBufferLoader
   bool field_A8;
   FlatBufferReadInfo mReadInfo;
   char gap_C8[128];
-  void* field_148;
-  void* field_150;
-  void* field_158;
-  char gap_160[32];
+  void *field_148;
+  void *field_150;
+  void *field_158;
+  void *field_160;
+  void *mAllocator1;
+  char gap_170[16];
   int field_180;
-  void* struct_188;
-  void* field_190;
-  char gap_188[70];
-  long field_1E0;
+  void *struct_188;
+  void *field_190;
+  char gap_188[64];
+  long mBufferSize;
+  long mReadPosition;
   void *mFlatBuffer;
-  void* class_1F0;
-  void* field_1F8;
-  void* field_200;
+  void *mAllocator2;
+  void *field_1F8;
+  void *field_200;
 };

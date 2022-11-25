@@ -61,41 +61,69 @@ HOOK_DEFINE_REPLACE(AbortImplOverloadHook) {
     }
 };
 
-// this isnt 100% working yet i believe, needs more testing
+FlatBufferReadInfo newReadInfo;
+nn::Result readResult = -1;
+
+void NOINLINE fileRedirectionFunc(FlatBufferLoader *loader) {
+    if(loader->mFileInfo && loader->field_148 && loader->field_A8) {
+
+        if(isEqualSubString(loader->mFileInfo->mPath, "chara/share/cm_drs")) {
+            Logger::log("Path: %s\n", loader->mFileInfo->mPath);
+        }
+
+        readResult = nn::fs::OpenFile(&newReadInfo.mHandle, loader->mFileInfo->mPath, nn::fs::OpenMode::OpenMode_Read);
+
+        if(readResult.isSuccess()) {
+
+            Logger::log("Found Replacement file in romfs!\n");
+
+            Logger::log("Path: %s\n", loader->mFileInfo->mPath);
+
+            nn::fs::GetFileSize(&newReadInfo.mSize, newReadInfo.mHandle);
+
+            Logger::log("Original Size: %lu New Size: %lu\n", loader->mBufferSize, newReadInfo.mSize);
+
+            loader->mBufferSize = newReadInfo.mSize;
+        }
+    }
+}
+
+HOOK_DEFINE_TRAMPOLINE(FlatBufferCreateFlatBufferHook) {
+    static FlatBufferReadResult Callback(FlatBufferLoader *thisPtr) {
+        fileRedirectionFunc(thisPtr);
+        return Orig(thisPtr);
+    }
+};
+
+HOOK_DEFINE_TRAMPOLINE(FlatBufferCreateFlatBuffer2Hook) {
+    static FlatBufferReadResult Callback(FlatBufferLoader *thisPtr) {
+        fileRedirectionFunc(thisPtr);
+        return Orig(thisPtr);
+    }
+};
+
+HOOK_DEFINE_TRAMPOLINE(FlatBufferCreateFlatBuffer3Hook) {
+    static FlatBufferReadResult Callback(FlatBufferLoader *thisPtr) {
+        fileRedirectionFunc(thisPtr);
+        return Orig(thisPtr);
+    }
+};
+
 HOOK_DEFINE_TRAMPOLINE(FlatBufferLoaderHook) {
     static FlatBufferReadResult Callback(FlatBufferLoader *thisPtr, void *buffer, ulong bufferSize) {
         
         if(thisPtr->mFileInfo && thisPtr->field_148 && thisPtr->field_A8) {
             
-            // Logger::log("Size: %lu Path: %s\n", bufferSize, thisPtr->mFileInfo->mPath);
+            if(readResult.isSuccess()) {
 
-            FlatBufferReadInfo newReadInfo;
+                newReadInfo.mPosition = 0;
 
-            nn::Result result = nn::fs::OpenFile(&newReadInfo.mHandle, thisPtr->mFileInfo->mPath, nn::fs::OpenMode::OpenMode_Read);
+                auto result = BinaryPointers::instance().readFileToBuffer(&newReadInfo, buffer, bufferSize);
 
-            if(result.isSuccess()) {
+                thisPtr->field_180 = 1;
+                thisPtr->mReadPosition = newReadInfo.mPosition;
 
-                Logger::log("Path: %s\n",thisPtr->mFileInfo->mPath);
-
-                Logger::log("Found Replacement file in romfs!\n");
-
-                nn::fs::GetFileSize(&newReadInfo.mSize, newReadInfo.mHandle);
-
-                Logger::log("Original Size: %lu New Size: %lu\n", bufferSize, newReadInfo.mSize);
-
-                if(bufferSize >= newReadInfo.mSize) {
-                    newReadInfo.mPosition = 0;
-
-                    auto result = BinaryPointers::instance().readFileToBuffer(&newReadInfo, buffer, bufferSize);
-
-                    thisPtr->field_180 = 1;
-                    thisPtr->field_1E0 = newReadInfo.mPosition;
-
-                    return result;
-
-                }else {
-                    Logger::log("Replacement file is larger than original! Unable to Load all data into existing Buffer.\n");
-                }
+                return result;
             }
         }
 
@@ -121,6 +149,12 @@ extern "C" void exl_main(void* x0, void* x1) {
     // file system redirection
 
     FlatBufferLoaderHook::InstallAtOffset(0xBEBCD4);
+
+    FlatBufferCreateFlatBufferHook::InstallAtOffset(0xBEBB90);
+
+    FlatBufferCreateFlatBuffer2Hook::InstallAtOffset(0x1DD78A4);
+
+    FlatBufferCreateFlatBuffer3Hook::InstallAtOffset(0x1E211B0);
 
     runCodePatches();
 
