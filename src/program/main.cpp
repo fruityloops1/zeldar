@@ -17,7 +17,9 @@ HOOK_DEFINE_TRAMPOLINE(MainInitHook) {
 
         R_ABORT_UNLESS(nn::fs::MountSdCardForDebug("sd"));
 
-        R_ABORT_UNLESS(Logger::instance().init("10.0.0.224", 3080).value);
+        R_ABORT_UNLESS(Logger::instance().init(LOGGER_IP, 3080).value);
+
+        Logger::log("Offsets loaded for Hooks: %s\n", BinaryPointers::getPtrsVer());
 
         Orig();
 
@@ -66,10 +68,6 @@ nn::Result readResult = -1;
 
 void NOINLINE fileRedirectionFunc(FlatBufferLoader *loader) {
     if(loader->mFileInfo && loader->field_148 && loader->field_A8) {
-
-        if(isEqualSubString(loader->mFileInfo->mPath, "chara/share/cm_drs")) {
-            Logger::log("Path: %s\n", loader->mFileInfo->mPath);
-        }
 
         readResult = nn::fs::OpenFile(&newReadInfo.mHandle, loader->mFileInfo->mPath, nn::fs::OpenMode::OpenMode_Read);
 
@@ -136,25 +134,22 @@ extern "C" void exl_main(void* x0, void* x1) {
     envSetOwnProcessHandle(exl::util::proc_handle::Get());
     exl::hook::Initialize();
 
+    // sets up function pointers needed to call funcs from the game binary
     BinaryPointers::initValues();
 
-    MainInitHook::InstallAtOffset(0x1439F40);
+    MainInitHook::InstallAtSymbol("nnMain");
 
-    // abort impl overwriting (calls exl's abort)
-
-    AbortImplHook::InstallAtOffset(0x3018DA0);
-
-    AbortImplOverloadHook::InstallAtOffset(0x3018D20);
+    FuncPtrTable *funcOffsets = BinaryPointers::getVerPtrs();
 
     // file system redirection
 
-    FlatBufferLoaderHook::InstallAtOffset(0xBEBCD4);
+    FlatBufferLoaderHook::InstallAtOffset(funcOffsets->flatBufferLoader);
 
-    FlatBufferCreateFlatBufferHook::InstallAtOffset(0xBEBB90);
+    FlatBufferCreateFlatBufferHook::InstallAtOffset(funcOffsets->flatBufferCreateFlatBuffer);
 
-    FlatBufferCreateFlatBuffer2Hook::InstallAtOffset(0x1DD78A4);
+    FlatBufferCreateFlatBuffer2Hook::InstallAtOffset(funcOffsets->flatBufferCreateFlatBuffer2);
 
-    FlatBufferCreateFlatBuffer3Hook::InstallAtOffset(0x1E211B0);
+    FlatBufferCreateFlatBuffer3Hook::InstallAtOffset(funcOffsets->flatBufferCreateFlatBuffer3);
 
     runCodePatches();
 
