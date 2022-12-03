@@ -9,6 +9,7 @@ Logger& Logger::instance() {
     return instance;
 }
 
+// namespace originally from https://github.com/randovania/exlaunch/blob/561d2b901af2a61c9169aca829b1cdd421f2d85e/source/program/remote_api.cpp
 namespace {
     constexpr inline auto DefaultTcpAutoBufferSizeMax      = 192 * 1024; /* 192kb */
     constexpr inline auto MinTransferMemorySize            = (2 * DefaultTcpAutoBufferSizeMax + (128 * 1024));

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "nn/fs.h"
 
 bool isEqualString(const char16_t* pString_0, const char16_t* pString_1) {
     unsigned short val;
@@ -47,4 +48,25 @@ bool isEndWithString(const char* pString_0, const char* pString_1) {
 
 bool isEqualSubString(const char* pString_0, const char* pString_1) {
     return strstr(pString_0, pString_1);
+}
+
+long getFileSize(const char *path) {
+    nn::fs::FileHandle handle;
+    long result = -1;
+
+    nn::Result openResult = nn::fs::OpenFile(&handle, path, nn::fs::OpenMode::OpenMode_Read);
+
+    if(openResult.isSuccess()) {
+        nn::fs::GetFileSize(&result, handle);
+        nn::fs::CloseFile(handle);
+    }
+
+    return result;
+}
+
+bool isFileExist(const char *path) {
+    nn::fs::DirectoryEntryType type;
+    nn::Result result = nn::fs::GetEntryType(&type, path);
+
+    return type == nn::fs::DirectoryEntryType_File;
 }

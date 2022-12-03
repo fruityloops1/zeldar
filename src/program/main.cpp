@@ -63,25 +63,20 @@ HOOK_DEFINE_REPLACE(AbortImplOverloadHook) {
     }
 };
 
-FlatBufferReadInfo newReadInfo;
-nn::Result readResult = -1;
-
 void NOINLINE fileRedirectionFunc(FlatBufferLoader *loader) {
     if(loader->mFileInfo && loader->field_148 && loader->field_A8) {
-
-        readResult = nn::fs::OpenFile(&newReadInfo.mHandle, loader->mFileInfo->mPath, nn::fs::OpenMode::OpenMode_Read);
-
-        if(readResult.isSuccess()) {
+        
+        if(isFileExist(loader->mFileInfo->mPath)) {
 
             Logger::log("Found Replacement file in romfs!\n");
 
             Logger::log("Path: %s\n", loader->mFileInfo->mPath);
 
-            nn::fs::GetFileSize(&newReadInfo.mSize, newReadInfo.mHandle);
+            long fileSize = getFileSize(loader->mFileInfo->mPath);
 
-            Logger::log("Original Size: %lu New Size: %lu\n", loader->mBufferSize, newReadInfo.mSize);
+            Logger::log("Original Size: %lu New Size: %lu\n", loader->mBufferSize, fileSize);
 
-            loader->mBufferSize = newReadInfo.mSize;
+            loader->mBufferSize = fileSize;
         }
     }
 }
@@ -111,17 +106,27 @@ HOOK_DEFINE_TRAMPOLINE(FlatBufferLoaderHook) {
     static FlatBufferReadResult Callback(FlatBufferLoader *thisPtr, void *buffer, ulong bufferSize) {
         
         if(thisPtr->mFileInfo && thisPtr->field_148 && thisPtr->field_A8) {
-            
-            if(readResult.isSuccess()) {
 
-                newReadInfo.mPosition = 0;
+            if(isFileExist(thisPtr->mFileInfo->mPath)) {
 
-                auto result = BinaryPointers::instance().readFileToBuffer(&newReadInfo, buffer, bufferSize);
+                FlatBufferReadInfo readInfo;
+                readInfo.mPosition = 0;
 
-                thisPtr->field_180 = 1;
-                thisPtr->mReadPosition = newReadInfo.mPosition;
+                nn::Result openResult = nn::fs::OpenFile(&readInfo.mHandle, thisPtr->mFileInfo->mPath, nn::fs::OpenMode::OpenMode_Read);
 
-                return result;
+                if(openResult.isSuccess()) {
+                    
+                    auto result = BinaryPointers::instance().readFileToBuffer(&readInfo, buffer, bufferSize);
+
+                    nn::fs::CloseFile(readInfo.mHandle);
+
+                    thisPtr->field_180 = 1;
+                    thisPtr->mReadPosition = readInfo.mPosition;
+
+                    return result;
+                }else {
+                    EXL_ABORT(0, "File Read Failed! Unable to Continue. Path: %s\n", thisPtr->mFileInfo->mPath);
+                }
             }
         }
 
