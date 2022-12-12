@@ -3,11 +3,6 @@
 #include "nn/oe.h"
 #include "logger/Logger.hpp"
 
-struct FuncTableEntry {
-    const char *mVersion;
-    FuncPtrTable mTable;
-};
-
 FuncPtrTable pointers[] = {
     {
         .tableVer = "1.0.0",
@@ -24,6 +19,14 @@ FuncPtrTable pointers[] = {
         .flatBufferCreateFlatBuffer = 0xC2EAEC,
         .flatBufferCreateFlatBuffer2 = 0x1E27E00,
         .flatBufferCreateFlatBuffer3 = 0x1E72770
+    },
+    {
+        .tableVer = "1.1.0",
+        .readFileToBufferPtr = 0xC50058,
+        .flatBufferLoader = 0xC4F3A8,
+        .flatBufferCreateFlatBuffer = 0xC4F264,
+        .flatBufferCreateFlatBuffer2 = 0x1E9E1E4,
+        .flatBufferCreateFlatBuffer3 = 0x1EEB2E4
     }
 };
 
