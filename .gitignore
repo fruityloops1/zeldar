@@ -40,3 +40,4 @@ build/
 
 flatbuffer_schems/
 flatbuffers/
+deploy/*

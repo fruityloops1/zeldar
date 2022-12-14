@@ -63,3 +63,7 @@ if (FTP_IP)
   add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND ncftpput  -P 5000 ${FTP_IP} /atmosphere/contents/${TITLE_ID}/exefs ${CMAKE_BINARY_DIR}/main.npdm ${CMAKE_BINARY_DIR}/subsdk9)
   endif()
 endif ()
+
+# Copy to deploy folder (for release builds)
+add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND cp ${CMAKE_BINARY_DIR}/main.npdm ${CMAKE_BINARY_DIR}/deploy/atmosphere/contents/${TITLE_ID}/exefs/main.npdm)
+add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND cp ${CMAKE_BINARY_DIR}/subsdk9 $${CMAKE_BINARY_DIR}/deploy/atmosphere/contents/${TITLE_ID}/exefs/subsdk9)
