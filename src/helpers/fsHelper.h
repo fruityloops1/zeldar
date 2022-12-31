@@ -7,6 +7,7 @@ namespace FsHelper {
 
     struct LoadData {
         const char *path;
+        int alignment = 8;
         void *buffer;
         long bufSize;
     };

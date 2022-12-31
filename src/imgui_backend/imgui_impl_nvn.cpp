@@ -227,7 +227,8 @@ namespace ImguiNvnBackend {
             Logger::log("Unable to compile shaders at runtime. falling back to pre-compiled shaders.\n");
 
             FsHelper::LoadData loadData = {
-                    .path = "sd:/smo/shaders/imgui.bin"
+                    .path = "sd:/smo/shaders/imgui.bin",
+                    .alignment = 0x1000
             };
 
             FsHelper::loadFileFromPath(loadData);

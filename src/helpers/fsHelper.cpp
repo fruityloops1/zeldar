@@ -46,8 +46,8 @@ namespace FsHelper {
 
         long size = 0;
         nn::fs::GetFileSize(&size, handle);
-        loadData.buffer = BinaryPointers::instance().malloc(size);
-        loadData.bufSize = size;
+        loadData.buffer = BinaryPointers::instance().malloc(ALIGN_UP(size, loadData.alignment));
+        loadData.bufSize = ALIGN_UP(size, loadData.alignment);
 
         EXL_ASSERT(loadData.buffer, "Failed to Allocate Buffer! File Size: %ld", size);
 
