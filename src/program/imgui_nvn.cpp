@@ -97,9 +97,8 @@ HOOK_DEFINE_TRAMPOLINE(DisableFullKeyState) {
         int result = Orig(unkInt, state, count, port);
 
         if (!InputHelper::isReadInputs()) {
-            if(InputHelper::isInputToggled()) {
+            if(InputHelper::isInputToggled())
                 *state = nn::hid::NpadFullKeyState();
-            }
         }
 
         return result;
@@ -111,7 +110,8 @@ HOOK_DEFINE_TRAMPOLINE(DisableHandheldState) {
         int result = Orig(unkInt, state, count, port);
 
         if (!InputHelper::isReadInputs()) {
-            *state = nn::hid::NpadHandheldState();
+            if(InputHelper::isInputToggled())
+                *state = nn::hid::NpadHandheldState();
         }
 
         return result;
@@ -123,7 +123,8 @@ HOOK_DEFINE_TRAMPOLINE(DisableJoyDualState) {
         int result = Orig(unkInt, state, count, port);
 
         if (!InputHelper::isReadInputs()) {
-            *state = nn::hid::NpadJoyDualState();
+            if(InputHelper::isInputToggled())
+                *state = nn::hid::NpadJoyDualState();
         }
 
         return result;
@@ -135,7 +136,8 @@ HOOK_DEFINE_TRAMPOLINE(DisableJoyLeftState) {
         int result = Orig(unkInt, state, count, port);
 
         if (!InputHelper::isReadInputs()) {
-            *state = nn::hid::NpadJoyLeftState();
+            if(InputHelper::isInputToggled())
+                *state = nn::hid::NpadJoyLeftState();
         }
 
         return result;
@@ -147,7 +149,8 @@ HOOK_DEFINE_TRAMPOLINE(DisableJoyRightState) {
         int result = Orig(unkInt, state, count, port);
 
         if (!InputHelper::isReadInputs()) {
-            *state = nn::hid::NpadJoyRightState();
+            if(InputHelper::isInputToggled())
+                *state = nn::hid::NpadJoyRightState();
         }
 
         return result;
