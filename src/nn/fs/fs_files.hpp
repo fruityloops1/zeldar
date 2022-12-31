@@ -96,4 +96,6 @@ namespace nn::fs {
     // Result GetSaveDataTimeStamp(nn::time::PosixTime*, nn::fs::SaveDataSpaceId, ulong);
     Result GetFileTimeStampForDebug(nn::fs::FileTimeStamp*, char const*);
 
+    Result DeleteFile(const char *path);
+
 } // namespace nn::fs

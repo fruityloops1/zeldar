@@ -3,14 +3,14 @@
 
 #include "nn/err.h"
 #include "nn/fs.h"
-#include "nn/diag.h"
 
 #include "logger/Logger.hpp"
 #include "socket.h"
 #include "game/BinaryPointers.hpp"
 #include "game/ResourceLoading/ArcResource.hpp"
 
-#include "helpers.hpp"
+#include "helpers.h"
+#include "imgui_nvn.h"
 
 HOOK_DEFINE_TRAMPOLINE(MainInitHook) {
     static void Callback() {
@@ -66,13 +66,13 @@ HOOK_DEFINE_REPLACE(AbortImplOverloadHook) {
 void NOINLINE fileRedirectionFunc(FlatBufferLoader *loader) {
     if(loader->mFileInfo && loader->field_148 && loader->field_A8) {
         
-        if(isFileExist(loader->mFileInfo->mPath)) {
+        if(FsHelper::isFileExist(loader->mFileInfo->mPath)) {
 
             Logger::log("Found Replacement file in romfs!\n");
 
             Logger::log("Path: %s\n", loader->mFileInfo->mPath);
 
-            long fileSize = getFileSize(loader->mFileInfo->mPath);
+            long fileSize = FsHelper::getFileSize(loader->mFileInfo->mPath);
 
             Logger::log("Original Size: %lu New Size: %lu\n", loader->mBufferSize, fileSize);
 
@@ -107,7 +107,7 @@ HOOK_DEFINE_TRAMPOLINE(FlatBufferLoaderHook) {
         
         if(thisPtr->mFileInfo && thisPtr->field_148 && thisPtr->field_A8) {
 
-            if(isFileExist(thisPtr->mFileInfo->mPath)) {
+            if(FsHelper::isFileExist(thisPtr->mFileInfo->mPath)) {
 
                 FlatBufferReadInfo readInfo;
                 readInfo.mPosition = 0;
@@ -157,6 +157,10 @@ extern "C" void exl_main(void* x0, void* x1) {
     FlatBufferCreateFlatBuffer3Hook::InstallAtOffset(funcOffsets->flatBufferCreateFlatBuffer3);
 
     runCodePatches();
+
+    // imgui hooks
+
+    nvnImGui::InstallHooks();
 
 }
 

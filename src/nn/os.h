@@ -22,8 +22,6 @@ struct InternalConditionVariable {
 };
 }  // namespace detail
 
-typedef u64 Tick;
-
 struct LightEventType {
     std::aligned_storage_t<0xc, 4> storage;
 };
@@ -242,8 +240,6 @@ void SetUserExceptionHandler(void (*)(UserExceptionInfo*), void*, ulong, UserExc
 
 // OTHER
 void GenerateRandomBytes(void*, u64);
-nn::os::Tick GetSystemTick();
-nn::os::Tick GetSystemTickFrequency();
 u64 GetThreadAvailableCoreMask();
 void SetMemoryHeapSize(u64 size);
 

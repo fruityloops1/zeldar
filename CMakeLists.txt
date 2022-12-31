@@ -21,12 +21,15 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/module/subsdk9.json.template ${CMAKE_
 
 ## Project sources
 include_directories(${PROJECT_SOURCE_DIR}/src/lib)
+include_directories(${PROJECT_SOURCE_DIR}/src/nvn)
 include_directories(${PROJECT_SOURCE_DIR}/src/nn)
 include_directories(${PROJECT_SOURCE_DIR}/src/program)
 include_directories(${PROJECT_SOURCE_DIR}/src/)
+include_directories(${PROJECT_SOURCE_DIR}/imgui)
 file(GLOB_RECURSE SOURCES_ASM ${PROJECT_SOURCE_DIR}/src/*.s)
 file(GLOB_RECURSE SOURCES_H ${PROJECT_SOURCE_DIR}/src/*.h ${PROJECT_SOURCE_DIR}/src/*.hpp)
 file(GLOB_RECURSE SOURCES_CXX ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/*.c)
+file(GLOB IMGUI_SOURCES ${PROJECT_SOURCE_DIR}/imgui/*.cpp)
 file(GLOB_RECURSE LOCAL_LIBRARIES ${PROJECT_SOURCE_DIR}/libs/*.a)
 
 ## Include nx tools
@@ -36,7 +39,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/SwitchTools.cmake)
 set(CMAKE_EXECUTABLE_SUFFIX ".elf")
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 #set_source_files_properties(${SOURCES_CXX} PROPERTIES LANGUAGE CXX)
-add_executable(subsdk9 ${SOURCES_ASM} ${SOURCES_C} ${SOURCES_H} ${SOURCES_CXX})
+add_executable(subsdk9 ${SOURCES_ASM} ${SOURCES_C} ${SOURCES_H} ${SOURCES_CXX} ${IMGUI_SOURCES})
 add_compile_definitions(EXL_LOAD_KIND=Module EXL_LOAD_KIND_ENUM=EXL_LOAD_KIND_MODULE)
 target_link_libraries(subsdk9 ${LOCAL_LIBRARIES})
 
@@ -59,11 +62,11 @@ if (FTP_IP)
   ## Upload to target switch
   if(FTP_USERNAME AND FTP_PASSWORD) # login using a username and password
     add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND ncftpput -u ${FTP_USERNAME} -p ${FTP_PASSWORD} -P 5000 ${FTP_IP} /atmosphere/contents/${TITLE_ID}/exefs ${CMAKE_BINARY_DIR}/main.npdm ${CMAKE_BINARY_DIR}/subsdk9)
-  else() # anonymous login
-  add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND ncftpput  -P 5000 ${FTP_IP} /atmosphere/contents/${TITLE_ID}/exefs ${CMAKE_BINARY_DIR}/main.npdm ${CMAKE_BINARY_DIR}/subsdk9)
+  else()
+  add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND ncftpput -u crafty -p boss -P 5000 ${FTP_IP} /atmosphere/contents/${TITLE_ID}/exefs ${CMAKE_BINARY_DIR}/main.npdm ${CMAKE_BINARY_DIR}/subsdk9)
   endif()
 endif ()
 
 # Copy to deploy folder (for release builds)
-add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND cp ${CMAKE_BINARY_DIR}/main.npdm ${CMAKE_BINARY_DIR}/deploy/atmosphere/contents/${TITLE_ID}/exefs/main.npdm)
-add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND cp ${CMAKE_BINARY_DIR}/subsdk9 $${CMAKE_BINARY_DIR}/deploy/atmosphere/contents/${TITLE_ID}/exefs/subsdk9)
+add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND cp ${CMAKE_BINARY_DIR}/main.npdm ${PROJECT_SOURCE_DIR}/deploy/atmosphere/contents/${TITLE_ID}/exefs/main.npdm)
+add_custom_command(TARGET subsdk9_meta POST_BUILD COMMAND cp ${CMAKE_BINARY_DIR}/subsdk9 ${PROJECT_SOURCE_DIR}/deploy/atmosphere/contents/${TITLE_ID}/exefs/subsdk9)

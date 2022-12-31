@@ -58,8 +58,18 @@ void BinaryPointers::initValues() {
 
     FuncPtrTable *ptrs = getVerPtrs();
 
-    instance().mPtrVer = ptrs->tableVer;
+    BinaryPointers &inst = instance();
 
-    instance().readFileToBuffer = reinterpret_cast<FlatBufferReadResult (*)(FlatBufferReadInfo* , void* , ulong)>(exl::util::modules::GetTargetOffset(ptrs->readFileToBufferPtr));
-    
+    inst.mPtrVer = ptrs->tableVer;
+
+    inst.readFileToBuffer = reinterpret_cast<FlatBufferReadResult (*)(FlatBufferReadInfo* , void* , ulong)>(exl::util::modules::GetTargetOffset(ptrs->readFileToBufferPtr));
+
+    R_ABORT_UNLESS(nn::ro::LookupSymbol(&ptrs->mallocPtr, "malloc"))
+    R_ABORT_UNLESS(nn::ro::LookupSymbol(&ptrs->freePtr, "free"))
+    R_ABORT_UNLESS(nn::ro::LookupSymbol(&ptrs->reallocPtr, "realloc"))
+
+    inst.malloc = reinterpret_cast<void *(*)(size_t)>(ptrs->mallocPtr);
+    inst.free = reinterpret_cast<void (*)(void*)>(ptrs->freePtr);
+    inst.realloc = reinterpret_cast<void *(*)(void*, size_t)>(ptrs->freePtr);
+
 }
