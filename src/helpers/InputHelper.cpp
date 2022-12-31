@@ -28,6 +28,8 @@ nn::hid::MouseState InputHelper::curMouseState{};
 nn::hid::MouseState InputHelper::prevMouseState{};
 
 ulong InputHelper::selectedPort = -1;
+bool InputHelper::isReadInput = true;
+bool InputHelper::toggleInput = true;
 
 const char *getStyleName(nn::hid::NpadStyleSet style) {
 
@@ -69,11 +71,17 @@ void InputHelper::updatePadState() {
 
     prevMouseState = curMouseState;
     nn::hid::GetMouseState(&curMouseState);
+
+    if(isHoldZL() && isPressZR()) {
+        toggleInput = !toggleInput;
+    }
 }
 
 bool InputHelper::tryGetContState(nn::hid::NpadBaseState *state, ulong port) {
 
     nn::hid::NpadStyleSet styleSet = nn::hid::GetNpadStyleSet(port);
+    isReadInput = true;
+    bool result = true;
 
     if (styleSet.isBitSet(nn::hid::NpadStyleTag::NpadStyleFullKey)) {
         nn::hid::GetNpadState((nn::hid::NpadFullKeyState *) state, port);
@@ -86,10 +94,12 @@ bool InputHelper::tryGetContState(nn::hid::NpadBaseState *state, ulong port) {
     } else if (styleSet.isBitSet(nn::hid::NpadStyleTag::NpadStyleJoyRight)) {
         nn::hid::GetNpadState((nn::hid::NpadJoyRightState *) state, port);
     } else {
-        return false;
+        result = false;
     }
 
-    return true;
+    isReadInput = false;
+
+    return result;
 
 }
 

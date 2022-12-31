@@ -91,6 +91,69 @@ nvn::GenericFuncPtrFunc getProc(nvn::Device *device, const char *procName) {
     return ptr;
 }
 
+HOOK_DEFINE_TRAMPOLINE(DisableFullKeyState) {
+    static int Callback(int *unkInt, nn::hid::NpadFullKeyState *state, int count, uint const &port) {
+
+        int result = Orig(unkInt, state, count, port);
+
+        if (!InputHelper::isReadInputs()) {
+            if(InputHelper::isInputToggled()) {
+                *state = nn::hid::NpadFullKeyState();
+            }
+        }
+
+        return result;
+    }
+};
+
+HOOK_DEFINE_TRAMPOLINE(DisableHandheldState) {
+    static int Callback(int *unkInt, nn::hid::NpadHandheldState *state, int count, uint const &port) {
+        int result = Orig(unkInt, state, count, port);
+
+        if (!InputHelper::isReadInputs()) {
+            *state = nn::hid::NpadHandheldState();
+        }
+
+        return result;
+    }
+};
+
+HOOK_DEFINE_TRAMPOLINE(DisableJoyDualState) {
+    static int Callback(int *unkInt, nn::hid::NpadJoyDualState *state, int count, uint const &port) {
+        int result = Orig(unkInt, state, count, port);
+
+        if (!InputHelper::isReadInputs()) {
+            *state = nn::hid::NpadJoyDualState();
+        }
+
+        return result;
+    }
+};
+
+HOOK_DEFINE_TRAMPOLINE(DisableJoyLeftState) {
+    static int Callback(int *unkInt, nn::hid::NpadJoyLeftState *state, int count, uint const &port) {
+        int result = Orig(unkInt, state, count, port);
+
+        if (!InputHelper::isReadInputs()) {
+            *state = nn::hid::NpadJoyLeftState();
+        }
+
+        return result;
+    }
+};
+
+HOOK_DEFINE_TRAMPOLINE(DisableJoyRightState) {
+    static int Callback(int *unkInt, nn::hid::NpadJoyRightState *state, int count, uint const &port) {
+        int result = Orig(unkInt, state, count, port);
+
+        if (!InputHelper::isReadInputs()) {
+            *state = nn::hid::NpadJoyRightState();
+        }
+
+        return result;
+    }
+};
+
 HOOK_DEFINE_TRAMPOLINE(NvnBootstrapHook) {
     static void *Callback(const char *funcName) {
 
@@ -131,6 +194,12 @@ void nvnImGui::procDraw() {
 
 void nvnImGui::InstallHooks() {
     NvnBootstrapHook::InstallAtSymbol("nvnBootstrapLoader");
+
+    DisableFullKeyState::InstallAtSymbol("_ZN2nn3hid6detail13GetNpadStatesEPiPNS0_16NpadFullKeyStateEiRKj");
+    DisableHandheldState::InstallAtSymbol("_ZN2nn3hid6detail13GetNpadStatesEPiPNS0_17NpadHandheldStateEiRKj");
+    DisableJoyDualState::InstallAtSymbol("_ZN2nn3hid6detail13GetNpadStatesEPiPNS0_16NpadJoyDualStateEiRKj");
+    DisableJoyLeftState::InstallAtSymbol("_ZN2nn3hid6detail13GetNpadStatesEPiPNS0_16NpadJoyLeftStateEiRKj");
+    DisableJoyRightState::InstallAtSymbol("_ZN2nn3hid6detail13GetNpadStatesEPiPNS0_17NpadJoyRightStateEiRKj");
 }
 
 bool nvnImGui::InitImGui() {
