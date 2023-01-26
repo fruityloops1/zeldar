@@ -150,6 +150,5 @@ private:
     static ulong selectedPort;
 
     static bool isReadInput;
-
     static bool toggleInput;
 };

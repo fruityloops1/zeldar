@@ -1,9 +1,9 @@
 #include "imgui_nvn.h"
-#include "game/BinaryPointers.hpp"
-#include "helpers/InputHelper.h"
 #include "imgui_backend/imgui_impl_nvn.hpp"
+#include "init.h"
 #include "lib.hpp"
 #include "logger/Logger.hpp"
+#include "helpers/InputHelper.h"
 #include "nvn_CppFuncPtrImpl.h"
 
 nvn::Device *nvnDevice;
@@ -17,24 +17,23 @@ nvn::DeviceInitializeFunc tempDeviceInitFuncPtr;
 nvn::QueueInitializeFunc tempQueueInitFuncPtr;
 nvn::QueuePresentTextureFunc tempPresentTexFunc;
 
-nvn::CommandBufferSetViewportsFunc tempSetViewportFunc;
+nvn::CommandBufferSetViewportFunc tempSetViewportFunc;
 
 bool hasInitImGui = false;
 
-void setViewport(nvn::CommandBuffer *cmdBuf, int first, int count, const float* ranges) {
-    tempSetViewportFunc(cmdBuf, first, count, ranges);
+namespace nvnImGui {
+    ImVector<ProcDrawFunc> drawQueue;
+    BackendFuncPtrs funcPtrs;
+    bool isSetPtrs = false;
+}
 
-    if (hasInitImGui) {
-        auto &io = ImGui::GetIO();
+#define IMGUI_USEEXAMPLE_DRAW false
 
-        int x = ranges[0];
-        int y = ranges[1];
-        int w = ranges[2];
-        int h = ranges[3];
+void setViewport(nvn::CommandBuffer *cmdBuf, int x, int y, int w, int h) {
+    tempSetViewportFunc(cmdBuf, x, y, w, h);
 
-        io.DisplaySize = ImVec2(w - x, h - y);
-
-    }
+    if (hasInitImGui)
+        ImGui::GetIO().DisplaySize = ImVec2(w - x, h - y);
 }
 
 void presentTexture(nvn::Queue *queue, nvn::Window *window, int texIndex) {
@@ -63,7 +62,6 @@ NVNboolean cmdBufInit(nvn::CommandBuffer *buffer, nvn::Device *device) {
     nvnCmdBuf = buffer;
 
     if (!hasInitImGui) {
-        Logger::log("Initializing ImGui.\n");
         hasInitImGui = nvnImGui::InitImGui();
     }
 
@@ -80,8 +78,8 @@ nvn::GenericFuncPtrFunc getProc(nvn::Device *device, const char *procName) {
     } else if (strcmp(procName, "nvnCommandBufferInitialize") == 0) {
         tempBufferInitFuncPtr = (nvn::CommandBufferInitializeFunc) ptr;
         return (nvn::GenericFuncPtrFunc) &cmdBufInit;
-    } else if (strcmp(procName, "nvnCommandBufferSetViewports") == 0) {
-        tempSetViewportFunc = (nvn::CommandBufferSetViewportsFunc) ptr;
+    } else if (strcmp(procName, "nvnCommandBufferSetViewport") == 0) {
+        tempSetViewportFunc = (nvn::CommandBufferSetViewportFunc) ptr;
         return (nvn::GenericFuncPtrFunc) &setViewport;
     } else if (strcmp(procName, "nvnQueuePresentTexture") == 0) {
         tempPresentTexFunc = (nvn::QueuePresentTextureFunc) ptr;
@@ -91,113 +89,116 @@ nvn::GenericFuncPtrFunc getProc(nvn::Device *device, const char *procName) {
     return ptr;
 }
 
+void disableButtons(nn::hid::NpadBaseState *state) {
+    if (!InputHelper::isReadInputs() && InputHelper::isInputToggled()) {
+        // clear out the data within the state (except for the sampling number and attributes)
+        state->mButtons = nn::hid::NpadButtonSet();
+        state->mAnalogStickL = nn::hid::AnalogStickState();
+        state->mAnalogStickR = nn::hid::AnalogStickState();
+    }
+}
+
 HOOK_DEFINE_TRAMPOLINE(DisableFullKeyState) {
     static int Callback(int *unkInt, nn::hid::NpadFullKeyState *state, int count, uint const &port) {
-
         int result = Orig(unkInt, state, count, port);
-
-        if (!InputHelper::isReadInputs()) {
-            if(InputHelper::isInputToggled())
-                *state = nn::hid::NpadFullKeyState();
-        }
-
-        return result;
-    }
+disableButtons(state);
+return result;
+}
 };
 
 HOOK_DEFINE_TRAMPOLINE(DisableHandheldState) {
     static int Callback(int *unkInt, nn::hid::NpadHandheldState *state, int count, uint const &port) {
         int result = Orig(unkInt, state, count, port);
-
-        if (!InputHelper::isReadInputs()) {
-            if(InputHelper::isInputToggled())
-                *state = nn::hid::NpadHandheldState();
-        }
-
-        return result;
-    }
+disableButtons(state);
+return result;
+}
 };
 
 HOOK_DEFINE_TRAMPOLINE(DisableJoyDualState) {
     static int Callback(int *unkInt, nn::hid::NpadJoyDualState *state, int count, uint const &port) {
         int result = Orig(unkInt, state, count, port);
-
-        if (!InputHelper::isReadInputs()) {
-            if(InputHelper::isInputToggled())
-                *state = nn::hid::NpadJoyDualState();
-        }
-
-        return result;
-    }
+disableButtons(state);
+return result;
+}
 };
 
 HOOK_DEFINE_TRAMPOLINE(DisableJoyLeftState) {
     static int Callback(int *unkInt, nn::hid::NpadJoyLeftState *state, int count, uint const &port) {
         int result = Orig(unkInt, state, count, port);
-
-        if (!InputHelper::isReadInputs()) {
-            if(InputHelper::isInputToggled())
-                *state = nn::hid::NpadJoyLeftState();
-        }
-
-        return result;
-    }
+disableButtons(state);
+return result;
+}
 };
 
 HOOK_DEFINE_TRAMPOLINE(DisableJoyRightState) {
     static int Callback(int *unkInt, nn::hid::NpadJoyRightState *state, int count, uint const &port) {
         int result = Orig(unkInt, state, count, port);
-
-        if (!InputHelper::isReadInputs()) {
-            if(InputHelper::isInputToggled())
-                *state = nn::hid::NpadJoyRightState();
-        }
-
-        return result;
-    }
+disableButtons(state);
+return result;
+}
 };
 
 HOOK_DEFINE_TRAMPOLINE(NvnBootstrapHook) {
     static void *Callback(const char *funcName) {
 
-    void *result = Orig(funcName);
+                      void *result = Orig(funcName);
 
-    Logger::log("Installing nvn Hooks.\n");
+if (strcmp(funcName, "nvnDeviceInitialize") == 0) {
+    tempDeviceInitFuncPtr = (nvn::DeviceInitializeFunc) result;
+    return (void *) &deviceInit;
+}
+if (strcmp(funcName, "nvnDeviceGetProcAddress") == 0) {
+    tempGetProcAddressFuncPtr = (nvn::DeviceGetProcAddressFunc) result;
+    return (void *) &getProc;
+}
 
-    if (strcmp(funcName, "nvnDeviceInitialize") == 0) {
-        tempDeviceInitFuncPtr = (nvn::DeviceInitializeFunc) result;
-        return (void *) &deviceInit;
-    }
-    if (strcmp(funcName, "nvnDeviceGetProcAddress") == 0) {
-        tempGetProcAddressFuncPtr = (nvn::DeviceGetProcAddressFunc) result;
-        return (void *) &getProc;
-    }
-
-    return result;
-    }
+return result;
+}
 };
+
+void nvnImGui::addDrawFunc(ProcDrawFunc func) {
+
+    EXL_ASSERT(!drawQueue.contains(func), "Function has already been added to queue!");
+
+    drawQueue.push_back(func);
+}
 
 void nvnImGui::procDraw() {
 
     ImguiNvnBackend::newFrame();
     ImGui::NewFrame();
 
-    ImGui::ShowDemoWindow();
-    //    ImGui::ShowStyleSelector("Style Selector");
-    //        ImGui::ShowMetricsWindow();
-    //        ImGui::ShowDebugLogWindow();
-    //        ImGui::ShowStackToolWindow();
-    //        ImGui::ShowAboutWindow();
-    //        ImGui::ShowFontSelector("Font Selector");
-    //        ImGui::ShowUserGuide();
+    for (auto drawFunc: drawQueue) {
+        drawFunc();
+    }
 
     ImGui::Render();
     ImguiNvnBackend::renderDrawData(ImGui::GetDrawData());
 }
 
+void nvnImGui::getAllocatorFuncs() {
+
+    Logger::log("Getting Games Allocator Funcs.\n");
+
+    if(isSetPtrs) {
+        return;
+    }
+
+    uintptr_t mallocPtr;
+    uintptr_t freePtr;
+
+    R_ABORT_UNLESS(nn::ro::LookupSymbol(&mallocPtr, "malloc"))
+    R_ABORT_UNLESS(nn::ro::LookupSymbol(&freePtr, "free"))
+
+    funcPtrs.imGuiMemAlloc = reinterpret_cast<ImGuiMemAllocFunc>(mallocPtr);
+    funcPtrs.imGuiMemFree = reinterpret_cast<ImGuiMemFreeFunc>(freePtr);
+
+    isSetPtrs = true;
+
+}
+
 void nvnImGui::InstallHooks() {
     NvnBootstrapHook::InstallAtSymbol("nvnBootstrapLoader");
-
     DisableFullKeyState::InstallAtSymbol("_ZN2nn3hid6detail13GetNpadStatesEPiPNS0_16NpadFullKeyStateEiRKj");
     DisableHandheldState::InstallAtSymbol("_ZN2nn3hid6detail13GetNpadStatesEPiPNS0_17NpadHandheldStateEiRKj");
     DisableJoyDualState::InstallAtSymbol("_ZN2nn3hid6detail13GetNpadStatesEPiPNS0_16NpadJoyDualStateEiRKj");
@@ -210,27 +211,15 @@ bool nvnImGui::InitImGui() {
 
         Logger::log("Creating ImGui.\n");
 
+        getAllocatorFuncs();
+
         IMGUI_CHECKVERSION();
 
-        ImGuiMemAllocFunc allocFunc = [](size_t size, void *user_data) {
-            return BinaryPointers::instance().malloc(size);
-        };
-
-        ImGuiMemFreeFunc freeFunc = [](void *ptr, void *user_data) {
-            BinaryPointers::instance().free(ptr);
-        };
-
-        Logger::log("Setting Allocator Functions.\n");
-
-        ImGui::SetAllocatorFunctions(allocFunc, freeFunc, nullptr);
-
-        Logger::log("Creating ImGui Context.\n");
+        ImGui::SetAllocatorFunctions(funcPtrs.imGuiMemAlloc, funcPtrs.imGuiMemFree, nullptr);
 
         ImGui::CreateContext();
         ImGuiIO &io = ImGui::GetIO();
         (void) io;
-
-        Logger::log("Setting Style to Dark.\n");
 
         ImGui::StyleColorsDark();
 
@@ -240,13 +229,24 @@ bool nvnImGui::InitImGui() {
             .cmdBuf = nvnCmdBuf
         };
 
-        Logger::log("Initializing Backend.\n");
-
         ImguiNvnBackend::InitBackend(initInfo);
 
         InputHelper::initKBM();
 
         InputHelper::setPort(0); // set input helpers default port to zero
+
+#if IMGUI_USEEXAMPLE_DRAW
+        IMGUINVN_DRAWFUNC(
+            ImGui::ShowDemoWindow();
+            //    ImGui::ShowStyleSelector("Style Selector");
+            //        ImGui::ShowMetricsWindow();
+            //        ImGui::ShowDebugLogWindow();
+            //        ImGui::ShowStackToolWindow();
+            //        ImGui::ShowAboutWindow();
+            //        ImGui::ShowFontSelector("Font Selector");
+            //        ImGui::ShowUserGuide();
+        )
+#endif
 
         return true;
 
