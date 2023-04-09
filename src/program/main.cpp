@@ -11,6 +11,7 @@
 
 #include "helpers.h"
 #include "imgui_nvn.h"
+#include "ExceptionHandler.h"
 
 HOOK_DEFINE_TRAMPOLINE(MainInitHook) {
     static void Callback() {
@@ -138,6 +139,11 @@ extern "C" void exl_main(void* x0, void* x1) {
     /* Setup hooking enviroment. */
     envSetOwnProcessHandle(exl::util::proc_handle::Get());
     exl::hook::Initialize();
+
+    // custom exception handler installation
+
+    nn::os::SetUserExceptionHandler(exception_handler, nullptr, 0, nullptr);
+    installExceptionStub();
 
     // sets up function pointers needed to call funcs from the game binary
     BinaryPointers::initValues();

@@ -4,6 +4,7 @@
 #include "lib.hpp"
 #include "helpers.h"
 #include "logger/Logger.hpp"
+#include "files/imgui_shader.h"
 
 #include "nn/os.h"
 #include "nn/hid.h"
@@ -212,36 +213,16 @@ namespace ImguiNvnBackend {
 
     bool createShaders() {
 
-        Logger::log("Creating/Loading Shaders.\n");
+        Logger::log("Loading Embedded Shaders.\n");
 
         auto bd = getBackendData();
 
-        if (false && ImguiShaderCompiler::CheckIsValidVersion(bd->device)) {
-            Logger::log("GLSLC compiler can be used!\n");
+        bd->imguiShaderBinary.size = imgui_shader_bin_len;
+        bd->imguiShaderBinary.ptr = (u8 *) IM_ALLOC(imgui_shader_bin_len);
 
-            ImguiShaderCompiler::InitializeCompiler();
+        memcpy(bd->imguiShaderBinary.ptr, imgui_shader_bin, imgui_shader_bin_len);
 
-            bd->imguiShaderBinary = ImguiShaderCompiler::CompileShader("imgui");
-
-        } else {
-            Logger::log("Unable to compile shaders at runtime. falling back to pre-compiled shaders.\n");
-
-            FsHelper::LoadData loadData = {
-                    .path = "sd:/smo/shaders/imgui.bin",
-                    .alignment = 0x1000
-            };
-
-            FsHelper::loadFileFromPath(loadData);
-
-            bd->imguiShaderBinary.size = loadData.bufSize;
-            bd->imguiShaderBinary.ptr = (u8 *) loadData.buffer;
-        }
-
-        if (bd->imguiShaderBinary.size > 0) {
-            return true;
-        }
-
-        return false;
+        return true;
     }
 
     bool setupFont() {
@@ -437,20 +418,18 @@ namespace ImguiNvnBackend {
 
         Logger::log("Creating Shaders.\n");
 
-        if (createShaders()) {
-            Logger::log("Shader Binaries Loaded! Setting up Render Data.\n");
+        createShaders();
 
-            if (bd->isUseTestShader)
-                initTestShader();
+        if (bd->isUseTestShader)
+            initTestShader();
 
-            if (setupShaders(bd->imguiShaderBinary.ptr, bd->imguiShaderBinary.size) && setupFont()) {
-                Logger::log("Rendering Setup!\n");
+        if (setupShaders(bd->imguiShaderBinary.ptr, bd->imguiShaderBinary.size) && setupFont()) {
+            Logger::log("Rendering Setup!\n");
 
-                bd->isInitialized = true;
+            bd->isInitialized = true;
 
-            } else {
-                Logger::log("Failed to Setup Render Data!\n");
-            }
+        } else {
+            Logger::log("Failed to Setup Render Data!\n");
         }
     }
 

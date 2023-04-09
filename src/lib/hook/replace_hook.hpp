@@ -2,6 +2,7 @@
 
 #include "base_hook.hpp"
 #include "util/func_ptrs.hpp"
+#include <nn/ro.h>
 
 #define HOOK_DEFINE_REPLACE(name)                        \
 struct name : public ::exl::hook::impl::ReplaceHook<name>
@@ -34,6 +35,15 @@ namespace exl::hook::impl {
             _HOOK_STATIC_CALLBACK_ASSERT();
             
             nx64::HookFuncRaw(ptr, Derived::Callback);
+        }
+
+        static ALWAYS_INLINE void InstallAtSymbol(const char *sym) {
+            _HOOK_STATIC_CALLBACK_ASSERT();
+
+            uintptr_t address = 0;
+            R_ABORT_UNLESS(nn::ro::LookupSymbol(&address, sym));
+
+            nx64::HookFuncRaw<void>(address, Derived::Callback);
         }
     };
 

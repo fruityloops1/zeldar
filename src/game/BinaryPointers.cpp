@@ -27,6 +27,14 @@ FuncPtrTable pointers[] = {
         .flatBufferCreateFlatBuffer = 0xC4F264,
         .flatBufferCreateFlatBuffer2 = 0x1E9E1E4,
         .flatBufferCreateFlatBuffer3 = 0x1EEB2E4
+    },
+    {
+        .tableVer = "1.2.0",
+        .readFileToBufferPtr = 0x00bd8b78,
+        .flatBufferLoader = 0x00bd7ec4,
+        .flatBufferCreateFlatBuffer = 0x00bd7d88,
+        .flatBufferCreateFlatBuffer2 = 0x01f12cbc,
+        .flatBufferCreateFlatBuffer3 = 0x01f5f8e0
     }
 };
 
