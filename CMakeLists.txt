@@ -37,11 +37,14 @@ include(${CMAKE_SOURCE_DIR}/cmake/SwitchTools.cmake)
 
 ## subsdk9
 set(CMAKE_EXECUTABLE_SUFFIX ".elf")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DISEMU=${ISEMU}")
 #set_source_files_properties(${SOURCES_CXX} PROPERTIES LANGUAGE CXX)
 add_executable(subsdk9 ${SOURCES_ASM} ${SOURCES_C} ${SOURCES_H} ${SOURCES_CXX} ${IMGUI_SOURCES})
 add_compile_definitions(EXL_LOAD_KIND=Module EXL_LOAD_KIND_ENUM=EXL_LOAD_KIND_MODULE)
 target_link_libraries(subsdk9 ${LOCAL_LIBRARIES})
+
+# generate header file for imgui shader binary
+target_embed_binaries(subsdk9 "${PROJECT_SOURCE_DIR}/files/ImGui/imgui.bin")
 
 ## Prepare subsdk ld
 set(SUBSDK_LD_PATH ${CMAKE_CURRENT_SOURCE_DIR}/module/subsdk9.ld)

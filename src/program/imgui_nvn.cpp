@@ -187,8 +187,8 @@ void nvnImGui::getAllocatorFuncs() {
     uintptr_t mallocPtr;
     uintptr_t freePtr;
 
-    R_ABORT_UNLESS(nn::ro::LookupSymbol(&mallocPtr, "malloc"))
-    R_ABORT_UNLESS(nn::ro::LookupSymbol(&freePtr, "free"))
+    nn::ro::LookupSymbol(&mallocPtr, "malloc");
+    nn::ro::LookupSymbol(&freePtr, "free");
 
     funcPtrs.imGuiMemAlloc = reinterpret_cast<ImGuiMemAllocFunc>(mallocPtr);
     funcPtrs.imGuiMemFree = reinterpret_cast<ImGuiMemFreeFunc>(freePtr);

@@ -5,7 +5,7 @@ if(NOT SWITCH)
 endif()
 
 # The directory of this file, which is needed to generate bin2s header files.
-get_filename_component(__SWITCH_TOOLS_DIR SwitchTools.cmake PATH)
+set(__SWITCH_TOOLS_DIR ${PROJECT_SOURCE_DIR}/cmake)
 
 ## A macro to find tools that come with devkitPro which are
 ## used for working with Switch file formats.

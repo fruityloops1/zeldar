@@ -72,9 +72,9 @@ void BinaryPointers::initValues() {
 
     inst.readFileToBuffer = reinterpret_cast<FlatBufferReadResult (*)(FlatBufferReadInfo* , void* , ulong)>(exl::util::modules::GetTargetOffset(ptrs->readFileToBufferPtr));
 
-    R_ABORT_UNLESS(nn::ro::LookupSymbol(&ptrs->mallocPtr, "malloc"))
-    R_ABORT_UNLESS(nn::ro::LookupSymbol(&ptrs->freePtr, "free"))
-    R_ABORT_UNLESS(nn::ro::LookupSymbol(&ptrs->reallocPtr, "realloc"))
+    EXL_ASSERT(nn::ro::LookupSymbol(&ptrs->mallocPtr, "malloc").isSuccess(), "Failed to find malloc Ptr!");
+    EXL_ASSERT(nn::ro::LookupSymbol(&ptrs->freePtr, "free").isSuccess(), "Failed to find free Ptr!");
+    EXL_ASSERT(nn::ro::LookupSymbol(&ptrs->reallocPtr, "realloc").isSuccess(), "Failed to find realloc Ptr!");
 
     inst.malloc = reinterpret_cast<void *(*)(size_t)>(ptrs->mallocPtr);
     inst.free = reinterpret_cast<void (*)(void*)>(ptrs->freePtr);

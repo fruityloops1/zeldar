@@ -114,7 +114,7 @@ CompiledData NOINLINE CreateShaderBinary(GLSLCoutput *compileData, const char *s
         char fullPath[0x40] = {};
         createPath(fullPath, "sd:/smo/shaders", shaderName, ".bin");
 
-        R_ABORT_UNLESS(FsHelper::writeFileToPath(binaryBuffer, binarySize, fullPath))
+        R_ABORT_UNLESS(FsHelper::writeFileToPath(binaryBuffer, binarySize, fullPath).value)
 
     }
 

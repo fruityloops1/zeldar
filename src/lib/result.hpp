@@ -3,7 +3,12 @@
 #include "types.h"
 #include "lib/diag/assert.hpp"
 
-#define R_ABORT_UNLESS(expr) EXL_ASSERT(R_SUCCEEDED(expr));
+#define R_ABORT_UNLESS(expr)    \
+    {                           \
+        Result _tmp_r = expr;   \
+        if(R_FAILED(_tmp_r))    \
+            EXL_ABORT(_tmp_r);  \
+    }
 
 namespace exl::result {
     using BaseType = u32;

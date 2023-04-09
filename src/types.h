@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <limits.h>
+#include <stdarg.h>
 
 typedef uint8_t u8;       ///<   8-bit unsigned integer.
 typedef uint16_t u16;     ///<  16-bit unsigned integer.
@@ -34,12 +35,6 @@ typedef	unsigned short	ushort;
 typedef	unsigned int	uint;	
 typedef	unsigned long	ulong;
 
-typedef unsigned char   undefined;
-typedef unsigned char    undefined1;
-typedef unsigned short    undefined2;
-typedef unsigned int    undefined3;
-typedef unsigned int    undefined4;
-typedef unsigned long    undefined8;
 
 #define ALIGN_UP(x, a) ((((uintptr_t)x) + (((uintptr_t)a)-1)) & ~(((uintptr_t)a)-1))
 #define ALIGN_DOWN(x, a) ((uintptr_t)(x) & ~(((uintptr_t)(a)) - 1))
@@ -51,11 +46,6 @@ typedef unsigned long    undefined8;
 #define PAGE_SIZE (0x1000)
 #define ALWAYS_INLINE inline __attribute__((always_inline))
 #define BITSIZEOF(x) (sizeof(x) * CHAR_BIT)
-
-typedef __builtin_va_list va_list;
-#define va_start(v,l) __builtin_va_start(v,l)
-#define va_end(v) __builtin_va_end(v)
-
 #define RAD(deg) (deg * (M_PI / 180)) // converts Degrees to Radians
 #define DEG(rad) (rad * (180 / M_PI)) // converts Radians to Degrees
 #define BTOC(bool) (bool ? "True" : "False") // converts boolean to true/false char
@@ -63,11 +53,4 @@ typedef __builtin_va_list va_list;
 // used to convert macro values to strings
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
-
-//using u64 = std::uint64_t;
-//using s64 = std::int64_t;
-
-// stores a result on a lot of OS-related functions
-typedef u32 Result;
-typedef u32 Handle;
-typedef void (*ThreadFunc)(void*);
+#define BITSIZEOF(x) (sizeof(x) * CHAR_BIT)

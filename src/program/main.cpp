@@ -1,5 +1,6 @@
 #include "lib.hpp"
 #include "patches.hpp"
+#include <diag/debug.hpp>
 
 #include "nn/err.h"
 #include "nn/fs.h"
@@ -16,7 +17,7 @@
 HOOK_DEFINE_TRAMPOLINE(MainInitHook) {
     static void Callback() {
 
-        R_ABORT_UNLESS(nn::fs::MountSdCardForDebug("sd"));
+        R_ABORT_UNLESS(nn::fs::MountSdCardForDebug("sd").value);
 
         R_ABORT_UNLESS(Logger::instance().init(LOGGER_IP, 3080).value);
 
@@ -136,8 +137,6 @@ HOOK_DEFINE_TRAMPOLINE(FlatBufferLoaderHook) {
 };
 
 extern "C" void exl_main(void* x0, void* x1) {
-    /* Setup hooking enviroment. */
-    envSetOwnProcessHandle(exl::util::proc_handle::Get());
     exl::hook::Initialize();
 
     // custom exception handler installation

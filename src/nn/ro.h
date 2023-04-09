@@ -5,9 +5,9 @@
 
 #pragma once
 
-#include "nx/types.h"
 #include "reloc/rtld/ModuleObject.hpp"
 #include "types.h"
+#include "nn/result.h"
 
 namespace nn {
    namespace ro {
@@ -91,20 +91,20 @@ namespace nn {
            BindFlag_Lazy = BIT(1),
        };
 
-       Result Initialize();
+       nn::Result Initialize();
 
-       Result LookupSymbol(uintptr_t* pOutAddress, const char* name);
+       nn::Result LookupSymbol(uintptr_t* pOutAddress, const char* name);
 
-       Result LookupModuleSymbol(uintptr_t* pOutAddress, const Module* pModule, const char* name);
-       Result LoadModule(Module* pOutModule, const void* pImage, void* buffer, size_t bufferSize, int flag);
+       nn::Result LookupModuleSymbol(uintptr_t* pOutAddress, const Module* pModule, const char* name);
+       nn::Result LoadModule(Module* pOutModule, const void* pImage, void* buffer, size_t bufferSize, int flag);
        // Result LoadModule(Module *pOutModule, const void *pImage, void *buffer, size_t bufferSize,int flag, bool
        // isNotReferenced);
-       Result UnloadModule(Module*);
-       Result GetBufferSize(size_t*, const void*);
+       nn::Result UnloadModule(Module*);
+       nn::Result GetBufferSize(size_t*, const void*);
 
-       Result RegisterModuleInfo(RegistrationInfo*, void const*);
-       Result RegisterModuleInfo(RegistrationInfo*, void const*, uint);
-       Result UnregisterModuleInfo(RegistrationInfo*, void const*);
+       nn::Result RegisterModuleInfo(RegistrationInfo*, void const*);
+       nn::Result RegisterModuleInfo(RegistrationInfo*, void const*, uint);
+       nn::Result UnregisterModuleInfo(RegistrationInfo*, void const*);
    };  // namespace ro
 
 };  // namespace nn

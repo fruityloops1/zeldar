@@ -74,8 +74,10 @@ nn::Result Logger::init(const char *ip, u16 port) {
 
 void Logger::log(const char *fmt, ...) {
 
+#if !ISEMU
     if(instance().mState != LoggerState::CONNECTED)
         return;
+#endif
 
     va_list args;
     va_start(args, fmt);
@@ -83,20 +85,30 @@ void Logger::log(const char *fmt, ...) {
     char buffer[0x500] = {};
 
     if(nn::util::VSNPrintf(buffer, sizeof(buffer), fmt, args) > 0) {
+#if !ISEMU
         nn::socket::Send(instance().mSocketFd, buffer, strlen(buffer), 0);
+#else
+        svcOutputDebugString(buffer, strlen(buffer));
+#endif
     }
 
     va_end(args);
 }
 
 void Logger::log(const char *fmt, va_list args) {
-
+#if !ISEMU
     if(instance().mState != LoggerState::CONNECTED)
         return;
+#endif
 
     char buffer[0x500] = {};
 
     if(nn::util::VSNPrintf(buffer, sizeof(buffer), fmt, args) > 0) {
+#if !ISEMU
         nn::socket::Send(instance().mSocketFd, buffer, strlen(buffer), 0);
+#else
+        svcOutputDebugString(buffer, strlen(buffer));
+#endif
     }
+
 }

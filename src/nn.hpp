@@ -5,6 +5,6 @@
 #error "Cannot use nnSdk when not as a module!"
 #endif
 
-#include "nn/fs.h"
+#include "nn/fs.hpp"
 #include "nn/os.hpp"
 #include "nn/time.hpp"

@@ -4,7 +4,7 @@
 #include "lib.hpp"
 #include "helpers.h"
 #include "logger/Logger.hpp"
-#include "files/imgui_shader.h"
+#include "imgui_bin.h"
 
 #include "nn/os.h"
 #include "nn/hid.h"
@@ -217,10 +217,10 @@ namespace ImguiNvnBackend {
 
         auto bd = getBackendData();
 
-        bd->imguiShaderBinary.size = imgui_shader_bin_len;
-        bd->imguiShaderBinary.ptr = (u8 *) IM_ALLOC(imgui_shader_bin_len);
+        bd->imguiShaderBinary.size = imgui_bin_size;
+        bd->imguiShaderBinary.ptr = (u8 *) IM_ALLOC(imgui_bin_size);
 
-        memcpy(bd->imguiShaderBinary.ptr, imgui_shader_bin, imgui_shader_bin_len);
+        memcpy(bd->imguiShaderBinary.ptr, imgui_bin, imgui_bin_size);
 
         return true;
     }

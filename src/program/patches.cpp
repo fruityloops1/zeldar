@@ -1,5 +1,6 @@
 #include "patches.hpp"
 #include "logger/Logger.hpp"
+#include "diag/debug.hpp"
 
 #include "game/ResourceLoading/ArcResource.hpp"
 
