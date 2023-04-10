@@ -78,10 +78,6 @@ void exception_handler(nn::os::UserExceptionInfo *info) {
     u64 bufSize = nn::diag::GetRequiredBufferSizeForGetAllModuleInfo();
     void *moduleBuffer = alloca(bufSize);
 
-    if(!moduleBuffer) {
-        Logger::log("Module Buffer Allocation Failed. Size: %ld\n", bufSize);
-    }
-
     int moduleCount = nn::diag::GetAllModuleInfo(&moduleInfos, moduleBuffer, bufSize);
 
     // Register Dump
