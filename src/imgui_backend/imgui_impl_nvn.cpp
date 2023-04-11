@@ -1,32 +1,63 @@
-#include <cmath>
 #include "imgui_impl_nvn.hpp"
+#include "helpers.h"
+#include "imgui_bin.h"
 #include "imgui_hid_mappings.h"
 #include "lib.hpp"
-#include "helpers.h"
 #include "logger/Logger.hpp"
-#include "imgui_bin.h"
+#include <cmath>
+#include <imgui_internal.h>
 
 #include "nn/os.h"
 #include "nn/hid.h"
+#include "nn/pl.h"
 
 #include "helpers/InputHelper.h"
 #include "MemoryPoolMaker.h"
 
 #define UBOSIZE 0x1000
 
-typedef float Matrix44f[4][4];
-
-// orthographic matrix used for shader
-static const Matrix44f projMatrix = {
-        {0.001563f, 0.0f,       0.0f,  0.0f},
-        {0.0f,      -0.002778f, 0.0f,  0.0f},
-        {0.0f,      0.0f,       -0.5f, 0.0f},
-        {-1.0f,     1.0f,       0.5f,  1.0f}
-};
-
 namespace ImguiNvnBackend {
 
-    // doesnt get used anymore really, as back when it was needed i had a simplified shader to test with, but now I just test with the actual imgui shader
+    void make_identity(Matrix44f& mtx) {
+        Matrix44f ident = {
+            {1.0f, 0.0f, 0.0f, 0.0f},
+            {0.0f, 1.0f, 0.0f, 0.0f},
+            {0.0f, 0.0f, 1.0f, 0.0f},
+            {0.0f, 0.0f, 0.0f, 1.0f}
+        };
+        memcpy(mtx, &ident, sizeof(Matrix44f));
+    }
+
+    void orthoRH_ZO(Matrix44f& mtx, float left, float right, float bottom, float top, float zNear, float zFar) {
+        make_identity(mtx);
+        mtx[0][0] = 2.f / (right - left);
+        mtx[1][1] = 2.f / (top - bottom);
+        mtx[2][2] = - 1.f / (zFar - zNear);
+        mtx[3][0] = - (right + left) / (right - left);
+        mtx[3][1] = - (top + bottom) / (top - bottom);
+        mtx[3][2] = - zNear / (zFar - zNear);
+    }
+
+    // WIP ImGui Functions from docking branch
+    static void ScaleWindow(ImGuiWindow* window, float scale)
+    {
+        ImVec2 origin = window->Viewport->Pos;
+        window->Pos = ImFloor(ImVec2((window->Pos.x - origin.x) * scale + origin.x, (window->Pos.y - origin.y) * scale + origin.y));
+        window->Size = ImFloor(ImVec2(window->Size.x * scale, window->Size.y * scale));
+        window->SizeFull = ImFloor(ImVec2(window->SizeFull.x * scale, window->SizeFull.y * scale));
+        window->ContentSize = ImFloor(ImVec2(window->ContentSize.x * scale, window->ContentSize.y * scale));
+    }
+
+    void ScaleWindowsInViewport(ImGuiViewport* viewport, float scale)
+    {
+        ImGuiContext& g = *GImGui;
+
+        for (int i = 0; i != g.Windows.Size; i++)
+            if (g.Windows[i]->Viewport == viewport)
+                ScaleWindow(g.Windows[i], scale);
+    }
+
+    // doesn't get used anymore really, as back when it was needed i had a simplified shader to test with, but now I just test with the actual imgui shader
     void initTestShader() {
 
         auto bd = getBackendData();
@@ -188,7 +219,7 @@ namespace ImguiNvnBackend {
         bd->cmdBuf->BindProgram(&bd->shaderProgram, nvn::ShaderStageBits::VERTEX | nvn::ShaderStageBits::FRAGMENT);
 
         bd->cmdBuf->BindUniformBuffer(nvn::ShaderStage::VERTEX, 0, *bd->uniformMemory, UBOSIZE);
-        bd->cmdBuf->UpdateUniformBuffer(*bd->uniformMemory, UBOSIZE, 0, sizeof(projMatrix), &projMatrix);
+        bd->cmdBuf->UpdateUniformBuffer(*bd->uniformMemory, UBOSIZE, 0, sizeof(bd->mProjMatrix), &bd->mProjMatrix);
 
         bd->cmdBuf->BindVertexBuffer(0, (*bd->vtxBuffer), bd->vtxBuffer->GetPoolSize());
 
@@ -225,6 +256,40 @@ namespace ImguiNvnBackend {
         return true;
     }
 
+    bool loadSystemFont() {
+        void *addr_std = nn::pl::GetSharedFontAddress(nn::pl::SharedFontType::STANDARD);
+        u32 size_std = nn::pl::GetSharedFontSize(nn::pl::SharedFontType::STANDARD);
+
+        void *addr_ext = nn::pl::GetSharedFontAddress(nn::pl::SharedFontType::NN_EXT);
+        u32 size_ext = nn::pl::GetSharedFontSize(nn::pl::SharedFontType::NN_EXT);
+
+        if (!((addr_std && size_std > 0) && (addr_ext && size_ext > 0))) {
+            return false;
+        }
+
+        ImGuiIO &io = ImGui::GetIO();
+
+        ImFontConfig fnt_cfg;
+        strcpy(fnt_cfg.Name, "Nintendo Standard");
+        fnt_cfg.FontDataOwnedByAtlas = false;
+        ImWchar extended_range[] = {0xe000, 0xe152};
+
+        io.Fonts->AddFontFromMemoryTTF(addr_std, size_std, 14.0f, &fnt_cfg, io.Fonts->GetGlyphRangesJapanese());
+
+        fnt_cfg.MergeMode = true;
+        io.Fonts->AddFontFromMemoryTTF(addr_ext, size_ext, 14.0f, &fnt_cfg, extended_range);
+
+        io.Fonts->Flags |= ImFontAtlasFlags_NoPowerOfTwoHeight;
+        if (!io.Fonts->Build()) {
+            Logger::log("Failed to build Font!\n");
+            return false;
+        }
+
+        Logger::log("Loaded System Font.\n");
+
+        return true;
+    }
+
     bool setupFont() {
 
         Logger::log("Setting up ImGui Font.\n");
@@ -257,6 +322,14 @@ namespace ImguiNvnBackend {
             Logger::log("Failed to Create Texture Pool!\n");
             return false;
         }
+
+        // load switch font data into imgui
+
+        if (!loadSystemFont()) {
+            Logger::log("Failed to load Switch System Font! Falling back to default ImGui font.\n");
+        }
+
+        io.Fonts->AddFontDefault();
 
         // convert imgui font texels
 
@@ -386,8 +459,6 @@ namespace ImguiNvnBackend {
         ImGuiIO &io = ImGui::GetIO();
         EXL_ASSERT(!io.BackendRendererUserData, "Already Initialized Imgui Backend!");
 
-        Logger::log("Setting Default Data/Config Data.\n");
-
         io.BackendPlatformName = "Switch";
         io.BackendRendererName = "imgui_impl_nvn";
         io.IniFilename = nullptr;
@@ -396,29 +467,21 @@ namespace ImguiNvnBackend {
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
         io.BackendFlags |= ImGuiBackendFlags_HasGamepad;
         io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
-        io.DisplaySize = ImVec2(1600, 900); // default size
-
-        Logger::log("Creating Backend Data.\n");
+        io.DisplaySize = ImVec2(1280, 720); // default size
 
         auto *bd = IM_NEW(NvnBackendData)();
-        EXL_ASSERT(bd, "Backend was not Created!");
-
         io.BackendRendererUserData = (void *) bd;
-
-        Logger::log("Setting Init Data into Backend Data.\n");
 
         bd->device = initInfo.device;
         bd->queue = initInfo.queue;
         bd->cmdBuf = initInfo.cmdBuf;
         bd->isInitialized = false;
 
-        Logger::log("Adding Default Font.\n");
-
-        io.Fonts->AddFontDefault();
-
-        Logger::log("Creating Shaders.\n");
+        updateProjection(io.DisplaySize);
 
         createShaders();
+
+        Logger::log("Shader Binaries Loaded! Setting up Render Data.\n");
 
         if (bd->isUseTestShader)
             initTestShader();
@@ -437,30 +500,19 @@ namespace ImguiNvnBackend {
 
     }
 
-    void updateInput() {
+    void updateMouse(ImGuiIO &io) {
+        ImVec2 mousePos(0, 0);
+        InputHelper::getMouseCoords(&mousePos.x, &mousePos.y);
 
-        if(!InputHelper::isInputToggled()) {
-            return;
-        }
+        mousePos = ImVec2((mousePos.x / 1280.f) * io.DisplaySize.x, (mousePos.y / 720.f) * io.DisplaySize.y);
 
-        ImGuiIO &io = ImGui::GetIO();
-
-        for (auto [im_k, nx_k]: npad_mapping) {
-            if (InputHelper::isButtonPress((nn::hid::NpadButton) nx_k))
-                io.AddKeyEvent((ImGuiKey) im_k, true);
-            else if (InputHelper::isButtonRelease((nn::hid::NpadButton) nx_k))
-                io.AddKeyEvent((ImGuiKey) im_k, false);
-        }
-
-        InputHelper::getMouseCoords(&io.MousePos.x, &io.MousePos.y);
+        io.AddMousePosEvent(mousePos.x, mousePos.y);
 
         ImVec2 scrollDelta(0, 0);
-
         InputHelper::getScrollDelta(&scrollDelta.x, &scrollDelta.y);
 
-        if (scrollDelta.x > 0.0f || scrollDelta.y > 0.0f) {
-            io.AddMouseWheelEvent(scrollDelta.x, scrollDelta.y);
-        }
+        if (scrollDelta.x != 0.0f)
+            io.AddMouseWheelEvent(0.0f, scrollDelta.x > 0.0f ? 0.5f : -0.5f);
 
         for (auto [im_k, nx_k]: mouse_mapping) {
             if (InputHelper::isMousePress((nn::hid::MouseButton) nx_k))
@@ -468,7 +520,9 @@ namespace ImguiNvnBackend {
             else if (InputHelper::isMouseRelease((nn::hid::MouseButton) nx_k))
                 io.AddMouseButtonEvent((ImGuiMouseButton) im_k, false);
         }
+    }
 
+    void updateKeyboard(ImGuiIO &io) {
         for (auto [im_k, nx_k]: key_mapping) {
             if (InputHelper::isKeyPress((nn::hid::KeyboardKey) nx_k)) {
                 io.AddKeyEvent((ImGuiKey) im_k, true);
@@ -476,7 +530,60 @@ namespace ImguiNvnBackend {
                 io.AddKeyEvent((ImGuiKey) im_k, false);
             }
         }
+    }
 
+    void updateGamepad(ImGuiIO &io) {
+        for (auto [im_k, nx_k]: npad_mapping) {
+            if (InputHelper::isButtonPress((nn::hid::NpadButton) nx_k))
+                io.AddKeyEvent((ImGuiKey) im_k, true);
+            else if (InputHelper::isButtonRelease((nn::hid::NpadButton) nx_k))
+                io.AddKeyEvent((ImGuiKey) im_k, false);
+        }
+    }
+
+    void updateInput() {
+
+        ImGuiIO &io = ImGui::GetIO();
+        updateKeyboard(io);
+        updateMouse(io);
+
+        if (InputHelper::isInputToggled()) {
+            updateGamepad(io);
+        }
+    }
+
+    void updateProjection(ImVec2 dispSize) {
+        orthoRH_ZO(getBackendData()->mProjMatrix, 0.0f, dispSize.x, dispSize.y, 0.0f, -1.0f, 1.0f);
+    }
+
+    void updateScale(bool isDocked) {
+        static float prevScale = 0.0f;
+
+        float scale = isDocked ? 1.5f : 1.f;
+
+        ImGuiStyle& stylePtr = ImGui::GetStyle();
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImGuiIO &io = ImGui::GetIO();
+
+        ImVec4 prevColors[ImGuiCol_COUNT] = {};
+        memcpy(&prevColors, &stylePtr.Colors, sizeof(stylePtr.Colors));
+
+        // reset style
+        stylePtr = ImGuiStyle();
+        // set colors back to previous
+        memcpy(&stylePtr.Colors, &prevColors, sizeof(stylePtr.Colors));
+        // scale style
+        ImGui::GetStyle().ScaleAllSizes(scale);
+        // reset scale of windows
+        if(prevScale != 0.0f) {
+            ScaleWindowsInViewport(viewport, 1.f / prevScale);
+        }
+
+        // scale window
+        ScaleWindowsInViewport(viewport, scale);
+        prevScale = scale;
+        // set font scale
+        io.FontGlobalScale = scale;
     }
 
     void newFrame() {
@@ -601,8 +708,8 @@ namespace ImguiNvnBackend {
 
         bd->cmdBuf->BindUniformBuffer(nvn::ShaderStage::VERTEX, 0, *bd->uniformMemory,
                                       UBOSIZE); // bind uniform block ptr
-        bd->cmdBuf->UpdateUniformBuffer(*bd->uniformMemory, UBOSIZE, 0, sizeof(projMatrix),
-                                        &projMatrix); // add projection matrix data to uniform data
+        bd->cmdBuf->UpdateUniformBuffer(*bd->uniformMemory, UBOSIZE, 0, sizeof(bd->mProjMatrix),
+                                        &bd->mProjMatrix); // add projection matrix data to uniform data
 
         setRenderStates(); // sets up the rest of the render state, required so that our shader properly gets drawn to the screen
 
@@ -627,15 +734,7 @@ namespace ImguiNvnBackend {
 
             for (auto cmd: cmdList->CmdBuffer) {
 
-                // im not exactly sure this scaling is a good solution,
-                // for some reason imgui clipping coords are relative to 720p instead of whatever I set for disp size.
-                ImVec2 origRes(1280.0f, 720.0f);
-                ImVec2 newRes = io.DisplaySize; // (1600.0f, 900.0f);
-
-                ImVec4 clipRect = ImVec4((cmd.ClipRect.x / origRes.x) * newRes.x,
-                                         (cmd.ClipRect.y / origRes.y) * newRes.y,
-                                         (cmd.ClipRect.z / origRes.x) * newRes.x,
-                                         (cmd.ClipRect.w / origRes.y) * newRes.y);
+                ImVec4 clipRect = cmd.ClipRect;
 
                 ImVec2 clip_min(clipRect.x, clipRect.y);
                 ImVec2 clip_max(clipRect.z, clipRect.w);

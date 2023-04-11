@@ -167,6 +167,10 @@ extern "C" void exl_main(void* x0, void* x1) {
 
     nvnImGui::InstallHooks();
 
+    nvnImGui::addDrawFunc([]() {
+        ImGui::ShowDemoWindow();
+    });
+
 }
 
 extern "C" NORETURN void exl_exception_entry() {

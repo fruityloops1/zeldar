@@ -15,10 +15,11 @@
  */
 
 #include "abort.hpp"
+#include "logger/Logger.hpp"
 
-#include <cstring>
 #include <algorithm>
 #include <atomic>
+#include <cstring>
 
 namespace exl::diag {
 
@@ -31,40 +32,89 @@ namespace exl::diag {
         if(!recursing && util::IsSocErista()) {
             /* Reboot to abort payload.*/
             AbortToPayload(ctx);
-        } else 
+        } else
         #endif
-        {
-            /* We have no capability of chainloading payloads on mariko. */
-            /* Don't have a great solution for this at the moment, just data abort. */
-            /* TODO: maybe write to a file? custom fatal program? */
-            register u64 addr __asm__("x27") = 0x6969696969696969;
-            register u64 val __asm__("x28")  = ctx.m_Result;
-            while (true) {
-                __asm__ __volatile__ (
-                    "str %[val], [%[addr]]"
-                    :
-                    : [val]"r"(val), [addr]"r"(addr)
-                );
-            }
+        // If this ever needs to be updated to a better color:
+        // https://chrisyeh96.github.io/2020/03/28/terminal-colors.html
+        Logger::log("\x1b[31m");
+        Logger::log("\n\nAssertion failed: %s = %u\n", ctx.expr, ctx.value);
+        Logger::log("At %s:%u\n", ctx.file, ctx.line);
+        Logger::log("  %s\n", ctx.func);
+        if (ctx.format != nullptr) {
+            Logger::log(ctx.format, ctx.args);
+            Logger::log("\n");
         }
+        Logger::log("\x1b[0m");
 
+        svcBreak(0x6942021, ctx.value, 0);
         UNREACHABLE;
     }
 
-    #define ABORT_WITH_VALUE(v)                             \
-    {                                                       \
-        exl::diag::AbortCtx ctx {.m_Result = (Result)v};    \
-        AbortImpl(ctx);                                     \
-    }
-
     /* TODO: better assert/abort support. */
-    void NORETURN NOINLINE AssertionFailureImpl(const char *file, int line, const char *func, const char *expr, u64 value, const char *format, ...) ABORT_WITH_VALUE(value)
-    void NORETURN NOINLINE AssertionFailureImpl(const char *file, int line, const char *func, const char *expr, u64 value)                          ABORT_WITH_VALUE(value)
-    void NORETURN NOINLINE AbortImpl(const char *file, int line, const char *func, const char *expr, u64 value, const char *format, ...)            ABORT_WITH_VALUE(value)
-    void NORETURN NOINLINE AbortImpl(const char *file, int line, const char *func, const char *expr, u64 value)                                     ABORT_WITH_VALUE(value)
+    void NORETURN NOINLINE AssertionFailureImpl(const char *file, int line, const char *func, const char *expr, u64 value, const char *format, ...) {
+        va_list list;
+        va_start(list, format);
+        exl::diag::AbortCtx ctx {
+            .value = (Result) value,
+            .file = file,
+            .line = line,
+            .func = func,
+            .expr = expr,
+            .format = format,
+            .args = list
+        };
+        AbortImpl(ctx);
+        va_end(list);
+    }
+    void NORETURN NOINLINE AssertionFailureImpl(const char *file, int line, const char *func, const char *expr, u64 value) {
+        exl::diag::AbortCtx ctx {
+            .value = value,
+            .file = file,
+            .line = line,
+            .func = func,
+            .expr = expr,
+            .format = nullptr,
+        };
+        AbortImpl(ctx);
+    }
+    void NORETURN NOINLINE AbortImpl(const char *file, int line, const char *func, const char *expr, u64 value, const char *format, ...) {
+        va_list list;
+        va_start(list, format);
+        exl::diag::AbortCtx ctx {
+            .value = value,
+            .file = file,
+            .line = line,
+            .func = func,
+            .expr = expr,
+            .format = format,
+            .args = list
+        };
+        AbortImpl(ctx);
+        va_end(list);
+    }
+    void NORETURN NOINLINE AbortImpl(const char *file, int line, const char *func, const char *expr, u64 value) {
+        exl::diag::AbortCtx ctx {
+            .value = value,
+            .file = file,
+            .line = line,
+            .func = func,
+            .expr = expr,
+            .format = nullptr,
+        };
+        AbortImpl(ctx);
+    }
 
 };
 
 /* C shim for libnx */
-extern "C" NORETURN void exl_abort(Result r) 
-    ABORT_WITH_VALUE(r)
+extern "C" NORETURN void exl_abort(Result r) {
+    exl::diag::AbortCtx ctx {
+        .value = r,
+        .file = "Unknown",
+        .line = 0,
+        .func = "exl_abort",
+        .expr = "Unknown cause!",
+        .format = nullptr,
+    };
+    AbortImpl(ctx);
+}
