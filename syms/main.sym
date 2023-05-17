@@ -1,0 +1,8 @@
+_Znwm = __main_start + 0x01078340;
+_ZnamPN4sead4HeapEi = __main_start + 0x00c1cb80;
+_ZdlPvm = __main_start + 0x021c3b90;
+
+realloc = __main_start + 0x00754800;
+malloc = __main_start + 0x010d9760;
+free = __main_start + 0x0068dc40;
+calloc = __main_start + 0x00031bb0;

@@ -6,7 +6,7 @@
 #include "types.h"
 
 struct CompiledData {
-    u8 *ptr;
+    u8* ptr;
     ulong size;
 };
 
@@ -23,11 +23,10 @@ struct BinaryHeader {
     u32 mVertexDataOffset;
     u32 mFragmentControlOffset;
     u32 mFragmentDataOffset;
-
 };
 
 namespace ImguiShaderCompiler {
-    bool CheckIsValidVersion(nvn::Device *device);
-    CompiledData CompileShader(const char *shaderName);
+    bool CheckIsValidVersion(nvn::Device* device);
+    CompiledData CompileShader(const char* shaderName);
     void InitializeCompiler();
-};
+}; // namespace ImguiShaderCompiler

@@ -1,0 +1,3 @@
+_ZNK4sead6Camera19getWorldPosByMatrixEPNS_7Vector3IfEE = __main_start + 0x01633478;
+_ZNK4sead6Camera21getLookVectorByMatrixEPNS_7Vector3IfEE = __main_start + 0x016334e4;
+_ZNK4sead6Camera19getUpVectorByMatrixEPNS_7Vector3IfEE = __main_start + 0x0163350c;

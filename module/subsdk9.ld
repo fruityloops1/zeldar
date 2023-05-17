@@ -15,6 +15,7 @@ SECTIONS
   PROVIDE(__start__ = 0x0);
   . = __start__;
   __code_start__ = .;
+  __main_start = . - 0x04dd6000;
 
   /* App code */
   .text : {
@@ -163,6 +164,9 @@ SECTIONS
   } :data
 
   __end__ = ABSOLUTE(.);
+
+	. = ALIGN(0x1000);
+	__sdk_start = ABSOLUTE(.);
 
   HIDDEN(__argdata__ = .);
 

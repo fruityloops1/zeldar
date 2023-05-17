@@ -11,10 +11,12 @@ set(CMAKE_CXX_STANDARD 23)
 
 if (LOGGER_IP)
   add_compile_definitions(LOGGER_IP="${LOGGER_IP}")
+  add_compile_definitions(private=public)
+  add_compile_definitions(protected=public)
 endif ()
 
 ## Title Id
-set(TITLE_ID 0100A3D008C5C000)
+set(TITLE_ID 0100F2C0115B6000)
 set(CONFIG_TITLE_ID 0x${TITLE_ID})
 add_compile_definitions(EXL_PROGRAM_ID=${CONFIG_TITLE_ID} NNSDK=1)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/module/subsdk9.json.template ${CMAKE_CURRENT_BINARY_DIR}/subsdk9.json)
@@ -25,12 +27,20 @@ include_directories(${PROJECT_SOURCE_DIR}/src/nvn)
 include_directories(${PROJECT_SOURCE_DIR}/src/nn)
 include_directories(${PROJECT_SOURCE_DIR}/src/program)
 include_directories(${PROJECT_SOURCE_DIR}/src/)
-include_directories(${PROJECT_SOURCE_DIR}/imgui)
+include_directories(${PROJECT_SOURCE_DIR}/lib/imgui)
+include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIR}/include/sead)
 file(GLOB_RECURSE SOURCES_ASM ${PROJECT_SOURCE_DIR}/src/*.s)
 file(GLOB_RECURSE SOURCES_H ${PROJECT_SOURCE_DIR}/src/*.h ${PROJECT_SOURCE_DIR}/src/*.hpp)
 file(GLOB_RECURSE SOURCES_CXX ${PROJECT_SOURCE_DIR}/src/*.cpp ${PROJECT_SOURCE_DIR}/src/*.c)
-file(GLOB IMGUI_SOURCES ${PROJECT_SOURCE_DIR}/imgui/*.cpp)
+file(GLOB IMGUI_SOURCES ${PROJECT_SOURCE_DIR}/lib/imgui/*.cpp)
 file(GLOB_RECURSE LOCAL_LIBRARIES ${PROJECT_SOURCE_DIR}/libs/*.a)
+set(SYMS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/syms/")
+
+
+execute_process(
+    COMMAND bash -c "find ${SYMS_PATH} -type f -name '*.sym' -exec cat {} + > ${CMAKE_BINARY_DIR}/syms.ld"
+)
 
 ## Include nx tools
 include(${CMAKE_SOURCE_DIR}/cmake/SwitchTools.cmake)

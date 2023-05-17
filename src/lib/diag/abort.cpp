@@ -15,7 +15,6 @@
  */
 
 #include "abort.hpp"
-#include "logger/Logger.hpp"
 
 #include <algorithm>
 #include <atomic>
@@ -23,51 +22,45 @@
 
 namespace exl::diag {
 
-    void NORETURN NOINLINE AbortImpl(const AbortCtx & ctx) {
-        #ifdef EXL_SUPPORTS_REBOOTPAYLOAD
+    void NORETURN NOINLINE AbortImpl(const AbortCtx& ctx) {
+#ifdef EXL_SUPPORTS_REBOOTPAYLOAD
         /* Ensure abort handler doesn't recursively abort. */
         static std::atomic<bool> recurse_guard;
         auto recursing = recurse_guard.exchange(true);
 
-        if(!recursing && util::IsSocErista()) {
+        if (!recursing && util::IsSocErista()) {
             /* Reboot to abort payload.*/
             AbortToPayload(ctx);
         } else
-        #endif
-        // If this ever needs to be updated to a better color:
-        // https://chrisyeh96.github.io/2020/03/28/terminal-colors.html
-        Logger::log("\x1b[31m");
-        Logger::log("\n\nAssertion failed: %s = %u\n", ctx.expr, ctx.value);
-        Logger::log("At %s:%u\n", ctx.file, ctx.line);
-        Logger::log("  %s\n", ctx.func);
-        if (ctx.format != nullptr) {
-            Logger::log(ctx.format, ctx.args);
-            Logger::log("\n");
-        }
-        Logger::log("\x1b[0m");
+#endif
+            // If this ever needs to be updated to a better color:
+            // https://chrisyeh96.github.io/2020/03/28/terminal-colors.html
+
+            if (ctx.format != nullptr) {
+            }
 
         svcBreak(0x6942021, ctx.value, 0);
         UNREACHABLE;
     }
 
     /* TODO: better assert/abort support. */
-    void NORETURN NOINLINE AssertionFailureImpl(const char *file, int line, const char *func, const char *expr, u64 value, const char *format, ...) {
+    void NORETURN NOINLINE AssertionFailureImpl(const char* file, int line, const char* func, const char* expr,
+                                                u64 value, const char* format, ...) {
         va_list list;
         va_start(list, format);
-        exl::diag::AbortCtx ctx {
-            .value = (Result) value,
-            .file = file,
-            .line = line,
-            .func = func,
-            .expr = expr,
-            .format = format,
-            .args = list
-        };
+        exl::diag::AbortCtx ctx{.value = (Result)value,
+                                .file = file,
+                                .line = line,
+                                .func = func,
+                                .expr = expr,
+                                .format = format,
+                                .args = list};
         AbortImpl(ctx);
         va_end(list);
     }
-    void NORETURN NOINLINE AssertionFailureImpl(const char *file, int line, const char *func, const char *expr, u64 value) {
-        exl::diag::AbortCtx ctx {
+    void NORETURN NOINLINE AssertionFailureImpl(const char* file, int line, const char* func, const char* expr,
+                                                u64 value) {
+        exl::diag::AbortCtx ctx{
             .value = value,
             .file = file,
             .line = line,
@@ -77,23 +70,17 @@ namespace exl::diag {
         };
         AbortImpl(ctx);
     }
-    void NORETURN NOINLINE AbortImpl(const char *file, int line, const char *func, const char *expr, u64 value, const char *format, ...) {
+    void NORETURN NOINLINE AbortImpl(const char* file, int line, const char* func, const char* expr, u64 value,
+                                     const char* format, ...) {
         va_list list;
         va_start(list, format);
-        exl::diag::AbortCtx ctx {
-            .value = value,
-            .file = file,
-            .line = line,
-            .func = func,
-            .expr = expr,
-            .format = format,
-            .args = list
-        };
+        exl::diag::AbortCtx ctx{
+            .value = value, .file = file, .line = line, .func = func, .expr = expr, .format = format, .args = list};
         AbortImpl(ctx);
         va_end(list);
     }
-    void NORETURN NOINLINE AbortImpl(const char *file, int line, const char *func, const char *expr, u64 value) {
-        exl::diag::AbortCtx ctx {
+    void NORETURN NOINLINE AbortImpl(const char* file, int line, const char* func, const char* expr, u64 value) {
+        exl::diag::AbortCtx ctx{
             .value = value,
             .file = file,
             .line = line,
@@ -104,11 +91,11 @@ namespace exl::diag {
         AbortImpl(ctx);
     }
 
-};
+}; // namespace exl::diag
 
 /* C shim for libnx */
 extern "C" NORETURN void exl_abort(Result r) {
-    exl::diag::AbortCtx ctx {
+    exl::diag::AbortCtx ctx{
         .value = r,
         .file = "Unknown",
         .line = 0,

@@ -3,11 +3,11 @@
 #define IMGUI_USER_CONFIG "imgui_backend/nvn_imgui_config.h"
 
 #include "ImguiShaderCompiler.h"
+#include "MemoryBuffer.h"
 #include "imgui.h"
 #include "nvn_Cpp.h"
 #include "nvn_CppMethods.h"
 #include "types.h"
-#include "MemoryBuffer.h"
 
 #include "os/os_tick.hpp"
 
@@ -15,24 +15,22 @@
 
 namespace ImguiNvnBackend {
 
-    typedef float Matrix44f[4][4];
-
     static constexpr int MaxTexDescriptors = 256 + 100;
     static constexpr int MaxSampDescriptors = 256 + 100;
 
     struct NvnBackendInitInfo {
-        nvn::Device *device;
-        nvn::Queue *queue;
-        nvn::CommandBuffer *cmdBuf;
+        nvn::Device* device;
+        nvn::Queue* queue;
+        nvn::CommandBuffer* cmdBuf;
     };
 
     struct NvnBackendData {
 
         // general data
 
-        nvn::Device *device;
-        nvn::Queue *queue;
-        nvn::CommandBuffer *cmdBuf;
+        nvn::Device* device;
+        nvn::Queue* queue;
+        nvn::CommandBuffer* cmdBuf;
 
         // builders
 
@@ -45,8 +43,8 @@ namespace ImguiNvnBackend {
 
         nvn::Program shaderProgram;
 
-        MemoryBuffer *shaderMemory;
-        MemoryBuffer *uniformMemory;
+        MemoryBuffer* shaderMemory;
+        MemoryBuffer* uniformMemory;
 
         nvn::ShaderData shaderDatas[2]; // 0 - Vert 1 - Frag
 
@@ -71,15 +69,15 @@ namespace ImguiNvnBackend {
 
         // render data
 
-        MemoryBuffer *vtxBuffer;
-        MemoryBuffer *idxBuffer;
+        MemoryBuffer* vtxBuffer;
+        MemoryBuffer* idxBuffer;
 
         // misc data
 
         nn::TimeSpanType lastTick;
         bool isInitialized;
 
-        Matrix44f mProjMatrix = {};
+        bool isDisableInput = true;
 
         CompiledData imguiShaderBinary;
 
@@ -88,33 +86,29 @@ namespace ImguiNvnBackend {
         bool isUseTestShader = false;
         nvn::Program testShader;
         nvn::ShaderData testShaderDatas[2]; // 0 - Vert 1 - Frag
-        MemoryBuffer *testShaderBuffer;
+        MemoryBuffer* testShaderBuffer;
         CompiledData testShaderBinary;
     };
 
     bool createShaders();
 
-    bool setupShaders(u8 *shaderBinary, ulong binarySize);
+    bool setupShaders(u8* shaderBinary, ulong binarySize);
 
     bool setupFont();
 
-    void InitBackend(const NvnBackendInitInfo &initInfo);
+    void InitBackend(const NvnBackendInitInfo& initInfo);
 
     void ShutdownBackend();
 
     void updateInput();
 
-    void updateProjection(ImVec2 dispSize);
-
-    void updateScale(bool isDocked);
-
     void newFrame();
 
     void setRenderStates();
 
-    void renderDrawData(ImDrawData *drawData);
+    void renderDrawData(ImDrawData* drawData);
 
-    NvnBackendData *getBackendData();
+    NvnBackendData* getBackendData();
 }; // namespace ImguiNvnBackend
 
 #endif

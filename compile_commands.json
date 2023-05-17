@@ -1,0 +1,33 @@
+[
+  {
+    "arguments": [
+      "clang++",
+      "-Wall",
+      "-O3",
+      "-DLOGGER_IP=\"192.168.1.99\"",
+      "-DLOGGER_PORT=1984",
+      "-D__thread=^-^",
+      "-I/home/fruityloops/git/zeldar/include",
+      "-I/home/fruityloops/git/zeldar/build",
+      "-I/home/fruityloops/git/zeldar/src",
+      "-I/home/fruityloops/git/zeldar/src/nvn",
+      "-I/home/fruityloops/git/zeldar/src/nn",
+      "-I/home/fruityloops/git/zeldar/src/nvnTool",
+      "-I/home/fruityloops/git/zeldar/src/lib",
+      "-I/home/fruityloops/git/zeldar/lib/sead/include",
+      "-I/home/fruityloops/git/zeldar/lib/imgui",
+      "-D__SWITCH__",
+      "-DNNSDK",
+      "-D__RTLD_6XX__",
+      "-Dprivate=public",
+      "-Dprotected=public",
+      "-DEXL_LOAD_KIND=Module",
+      "-DEXL_LOAD_KIND_ENUM=2",
+      "-DEXL_PROGRAM_ID=0x010028600ebda000",
+      "-std=gnu++20",
+      "/home/fruityloops/git/zeldar/src/program/main.cpp"
+    ],
+    "directory": "/home/fruityloops/git/zeldar/build",
+    "file": "/home/fruityloops/git/zeldar/src/program/main.cpp"
+  }
+]
