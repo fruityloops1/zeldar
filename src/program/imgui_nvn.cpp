@@ -168,6 +168,8 @@ void nvnImGui::addDrawFunc(ProcDrawFunc func) {
 }
 
 void nvnImGui::procDraw() {
+    if (!InputHelper::toggleInput)
+        return;
 
     ImguiNvnBackend::newFrame();
     ImGui::NewFrame();
