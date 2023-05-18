@@ -1,6 +1,0 @@
-_ZNK4sead6Camera19getWorldPosByMatrixEPNS_7Vector3IfEE = __main_start + 0x01633478;
-_ZNK4sead6Camera21getLookVectorByMatrixEPNS_7Vector3IfEE = __main_start + 0x016334e4;
-_ZNK4sead6Camera19getUpVectorByMatrixEPNS_7Vector3IfEE = __main_start + 0x0163350c;
-_ZTVN4sead12LookAtCameraE = __main_start + 0x045bb2a0;
-_ZNK4sead12LookAtCamera14doUpdateMatrixEPNS_8Matrix34IfEE = __main_start + 0x00947728;
-_ZN4sead12LookAtCameraD1Ev = __main_start + 0x02a33f04;

@@ -1,0 +1,2 @@
+_Z13createExpHeapmPPKcPN4sead4HeapEiNS3_13HeapDirectionEb = _ZN4sead7ExpHeap9tryCreateEmRKNS_14SafeStringBaseIcEEPNS_4HeapEiNS5_13HeapDirectionEb;
+
