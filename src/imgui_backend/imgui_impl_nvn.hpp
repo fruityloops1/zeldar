@@ -1,7 +1,5 @@
 #pragma once
 
-#define IMGUI_USER_CONFIG "imgui_backend/nvn_imgui_config.h"
-
 #include "ImguiShaderCompiler.h"
 #include "MemoryBuffer.h"
 #include "imgui.h"

@@ -25,14 +25,9 @@ void drawDbgGui() {
         dbgGui->draw();
 }
 
-// LTO moment
-sead::ExpHeap* createExpHeap(size_t size, const char** name, sead::Heap* parent, s32 alignment,
-                             sead::ExpHeap::HeapDirection direction, bool);
-
 void createRootHeap() {
-    const char* name = "DbgGuiHeap";
-    pe::gui::getDbgGuiHeap() = createExpHeap(1024 * 1024 * 10, &name, sead::HeapMgr::sRootHeaps[0], 8,
-                                             sead::Heap::cHeapDirection_Forward, false);
+    pe::gui::getDbgGuiHeap() = sead::ExpHeap::tryCreate(1024 * 1024 * 11, "DbgGuiHeap", sead::HeapMgr::sRootHeaps[0], 8,
+                                                        sead::Heap::cHeapDirection_Forward, false);
 
     pe::gui::DbgGui::createInstance(pe::gui::getDbgGuiHeap());
 }

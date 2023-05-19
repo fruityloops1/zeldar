@@ -10,6 +10,7 @@
 
 #include "MemoryPoolMaker.h"
 #include "helpers/InputHelper.h"
+#include "pe/DbgGui/DbgGui.h"
 
 #define UBOSIZE 0x1000
 
@@ -371,14 +372,7 @@ namespace ImguiNvnBackend {
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-        /*FsHelper::LoadData loadData = {.path = "sd:/Peepa/ImGuiData/Fonts/SFMonoSquare-Regular.otf"};
-
-        FsHelper::loadFileFromPath(loadData);
-
-        io.Fonts->AddFontFromMemoryTTF(loadData.buffer, loadData.bufSize, 13, nullptr,
-                                       io.Fonts->GetGlyphRangesJapanese());*/
         io.Fonts->AddFontDefault();
-
         ImGuiStyle& style = ImGui::GetStyle();
         ImVec4* colors = style.Colors;
 

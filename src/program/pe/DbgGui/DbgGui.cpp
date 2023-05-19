@@ -3,6 +3,7 @@
 #include "pe/DbgGui/DbgGui.h"
 #include "pe/DbgGui/MenuBar.h"
 #include "pe/DbgGui/Windows/Camera.h"
+#include "pe/DbgGui/Windows/HeapViewer.h"
 #include "pe/DbgGui/Windows/ImGuiDemo.h"
 #include "program/imgui_nvn.h"
 #include "util/modules.hpp"
@@ -20,7 +21,7 @@ namespace pe {
             mComponents[0] = new MenuBar;
             mComponents[1] = new ImGuiDemo;
             mComponents[2] = new Camera;
-            // mComponents.pushBack(new HeapViewer);
+            mComponents[3] = new HeapViewer;
         }
 
         void DbgGui::draw() {

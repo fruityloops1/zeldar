@@ -13,6 +13,7 @@ if (LOGGER_IP)
   add_compile_definitions(LOGGER_IP="${LOGGER_IP}")
   add_compile_definitions(private=public)
   add_compile_definitions(protected=public)
+  add_compile_definitions(IMGUI_USER_CONFIG="imgui_backend/nvn_imgui_config.h")
 endif ()
 
 ## Title Id

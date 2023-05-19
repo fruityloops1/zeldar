@@ -15,11 +15,12 @@ namespace pe {
         class DbgGui {
             SEAD_SINGLETON_DISPOSER(DbgGui);
 
-            IComponent* mComponents[3]{nullptr};
+            IComponent* mComponents[4]{nullptr};
 
             struct {
                 bool showDemoWindow = false;
                 bool showCamera = false;
+                bool showHeapViewer = false;
             } mSharedData;
 
         public:

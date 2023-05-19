@@ -13,6 +13,7 @@ namespace pe {
                 if (ImGui::BeginMenu("Windows")) {
                     ImGui::Checkbox("Demo Window", &getDbgGuiSharedData().showDemoWindow);
                     ImGui::Checkbox("Camera", &getDbgGuiSharedData().showCamera);
+                    ImGui::Checkbox("HeapViewer", &getDbgGuiSharedData().showHeapViewer);
                     ImGui::EndMenu();
                 }
                 ImGui::EndMainMenuBar();
