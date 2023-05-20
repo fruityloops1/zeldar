@@ -1,4 +1,3 @@
-#include "heap/seadDisposer.h"
 #include "imgui.h"
 #include "pe/DbgGui/DbgGui.h"
 #include "pe/DbgGui/MenuBar.h"
@@ -7,6 +6,7 @@
 #include "pe/DbgGui/Windows/ImGuiDemo.h"
 #include "program/imgui_nvn.h"
 #include "util/modules.hpp"
+#include <sead/heap/seadDisposer.h>
 
 namespace pe {
     namespace gui {

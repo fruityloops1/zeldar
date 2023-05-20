@@ -1,2 +1,1 @@
-_Z13createExpHeapmPPKcPN4sead4HeapEiNS3_13HeapDirectionEb = _ZN4sead7ExpHeap9tryCreateEmRKNS_14SafeStringBaseIcEEPNS_4HeapEiNS5_13HeapDirectionEb;
-
+_ZN2pe3gui22DisgustingLookAtCamera14doUpdateMatrixEPN4sead8Matrix34IfEE = __main_start + 0x00a8b40c;

@@ -3,6 +3,7 @@
 #include "hid.h"
 #include "hook/trampoline.hpp"
 #include "imgui.h"
+#include "patch/code_patcher.hpp"
 #include "pe/DbgGui/Windows/Camera.h"
 #include <sead/controller/seadController.h>
 #include <sead/gfx/seadCamera.h>
@@ -17,38 +18,21 @@ namespace pe {
                                  bool thing2, int thing3);
         };
 
-        sead::Matrix34f makeViewMtx(const sead::Vector3f& pos, const sead::Vector3f& target, const sead::Vector3f& up) {
-            sead::Vector3f zaxis = pos - target;
-            zaxis.normalize();
+        struct DisgustingLookAtCamera {
+            char _0[0x50];
+            sead::Vector3f mUp;
+            int _5C;
+            sead::Vector3<double> mPos;
+            sead::Vector3<double> mAt;
 
-            sead::Vector3f xaxis;
-            xaxis.setCross(up, zaxis);
-            xaxis.normalize();
-
-            sead::Vector3f yaxis;
-            yaxis.setCross(zaxis, xaxis);
-            yaxis.normalize();
-
-            sead::Matrix34f mtx;
-            mtx.m[0][0] = xaxis.x;
-            mtx.m[0][1] = xaxis.y;
-            mtx.m[0][2] = xaxis.z;
-            mtx.m[1][0] = yaxis.x;
-            mtx.m[1][1] = yaxis.y;
-            mtx.m[1][2] = yaxis.z;
-            mtx.m[2][0] = zaxis.x;
-            mtx.m[2][1] = zaxis.y;
-            mtx.m[2][2] = zaxis.z;
-            mtx.setBase(3, {-pos.dot(xaxis), -pos.dot(yaxis), -pos.dot(zaxis)});
-
-            return mtx;
-        }
+            void doUpdateMatrix(sead::Matrix34f* out);
+        };
 
         static sead::Vector3f sUp{0, 1, 0}, sPos{0, 0, 0}, sAt{1, 0, 1}, sDirection{1, 0, 1};
 
         static bool sEnabled = false;
 
-        static float sWheelMoveVel = 0, sCameraSpeed = 3.2;
+        static float sWheelMoveVel = 0, sCameraSpeed = 1.0;
         static sead::Vector2f sMouseDelta{0, 0}, sLastMousePos{0, 0}, sCameraMoveVel{0, 0};
 
         static sead::Vector3f rotateVectorY(const sead::Vector3f& vector, float angle) {
@@ -68,7 +52,7 @@ namespace pe {
             InputHelper::getScrollDelta(&scrollDelta.x, &scrollDelta.y);
 
             if (InputHelper::isMouseHold(nn::hid::MouseButton::Middle)) {
-                sCameraSpeed += scrollDelta.x / 1500;
+                sCameraSpeed += scrollDelta.x / 3500;
 
                 if (sCameraSpeed <= 0)
                     sCameraSpeed = .0625;
@@ -144,31 +128,37 @@ namespace pe {
             sCameraMoveVel /= 1.4;
         }
 
-        void LayerCalc::Callback(char* thisPtr, sead::Controller* controller, int thing, bool thing2, int thing3) {
-            Orig(thisPtr, controller, thing, thing2, thing3);
-            sead::Camera* camera = *(sead::Camera**)(thisPtr + 0x78); // cant be Bothered
-
-            InputHelper::updatePadState();
+        void disgustingCameraHook(DisgustingLookAtCamera* thisPtr, sead::Matrix34f* out) {
             updateCameraInput();
 
-            if (camera) {
-                if (InputHelper::isKeyPress(nn::hid::KeyboardKey::O) ||
-                    (InputHelper::isButtonHold(nn::hid::NpadButton::ZR) &&
-                     InputHelper::isButtonPress(nn::hid::NpadButton::Plus))) {
-                    sEnabled = !sEnabled;
-                }
-
-                if (sEnabled) {
-                    camera->mMatrix = makeViewMtx(sPos, sAt, sUp);
-                } else {
-                    // camera->getWorldPosByMatrix(&sPos);
-                    // camera->getLookVectorByMatrix(&sAt);
-                    // camera->getUpVectorByMatrix(&sUp);
-                }
+            if (InputHelper::isKeyHold(nn::hid::KeyboardKey::O) ||
+                (InputHelper::isButtonHold(nn::hid::NpadButton::ZR) &&
+                 InputHelper::isButtonHold(nn::hid::NpadButton::Plus))) {
+                sEnabled = !sEnabled;
             }
+
+            if (sEnabled) {
+                thisPtr->mPos = {double(sPos.x), double(sPos.y), double(sPos.z)};
+                thisPtr->mAt = {double(sAt.x), double(sAt.y), double(sAt.z)};
+                thisPtr->mUp = sUp;
+            } else {
+                sUp = thisPtr->mUp;
+                sPos = {float(thisPtr->mPos.x), float(thisPtr->mPos.y), float(thisPtr->mPos.z)};
+                sAt = {float(thisPtr->mAt.x), float(thisPtr->mAt.y), float(thisPtr->mAt.z)};
+                sDirection = sAt - sPos;
+            }
+            thisPtr->doUpdateMatrix(out);
         }
 
-        Camera::Camera() { LayerCalc::InstallAtOffset(0x009451d0); }
+        void LayerCalc::Callback(char* thisPtr, sead::Controller* controller, int thing, bool thing2, int thing3) {
+            Orig(thisPtr, controller, thing, thing2, thing3);
+            InputHelper::updatePadState();
+        }
+
+        Camera::Camera() {
+            LayerCalc::InstallAtOffset(0x009451d0);
+            exl::patch::CodePatcher(0x00cdb894).BranchLinkInst((void*)disgustingCameraHook);
+        }
 
         void Camera::update() {}
 
