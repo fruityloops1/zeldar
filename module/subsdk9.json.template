@@ -1,6 +1,6 @@
 {
     "name": "Application",
-    "title_id": "0x0100a3d008c5c000",
+    "title_id": "0x0100F2C0115B6000",
     "title_id_range_min": "0x0100000000010000",
     "title_id_range_max": "0x01ffffffffffffff",
     "main_thread_stack_size": "0x00100000",
