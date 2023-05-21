@@ -122,6 +122,11 @@ namespace pe {
                     sPos -= yaxis * speed;
             }
 
+            if (InputHelper::isKeyHold(nn::hid::KeyboardKey::R)) {
+                float speed = sCameraSpeed / 10;
+                sPos += sead::Vector3f(0, 1, 0) * speed;
+            }
+
             sAt = sPos + sDirection;
 
             sWheelMoveVel /= 1.4;
