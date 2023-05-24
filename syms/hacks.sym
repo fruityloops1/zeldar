@@ -1,1 +1,2 @@
 _ZN2pe3gui22DisgustingLookAtCamera14doUpdateMatrixEPN4sead8Matrix34IfEE = __main_start + 0x00a8b40c;
+_Z24unk_RenderUltrahandVoxelv = __main_start + 0x0095E7F4;

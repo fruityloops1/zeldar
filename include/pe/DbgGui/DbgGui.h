@@ -20,6 +20,7 @@ namespace pe {
             struct {
                 bool showDemoWindow = false;
                 bool showCamera = false;
+                bool showGraphics = false;
                 bool showHeapViewer = false;
             } mSharedData;
 
